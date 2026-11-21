@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /super-admin
+Disallow: /profile
+Disallow: /order-success
+
+Sitemap: https://kavoryn.com/sitemap.xml

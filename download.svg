@@ -1,0 +1,8 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300">
+  <rect width="1200" height="300" fill="#F5F1E8"></rect>
+  <text x="40" y="172" font-family="Anton, Impact, sans-serif" font-size="166" font-weight="900" letter-spacing="-5" fill="#171717">KAVORYN</text>
+  <text x="48" y="232" font-family="Space Grotesk, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="3" fill="#171717">MAKE YOUR WALLS SPEAK.</text>
+  <rect x="1080" y="195" width="72" height="20" fill="#3155E7"></rect>
+  <rect x="1152" y="195" width="24" height="20" fill="#F05A3A"></rect>
+</svg>

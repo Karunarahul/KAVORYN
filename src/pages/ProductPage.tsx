@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { useQuery } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 import {
   ArrowRight,
   Check,
@@ -18,9 +20,11 @@ import {
   formatMoney,
   getProductPrice,
   prices,
-  products,
+  products as staticProducts,
   shippingConfig,
   sizeDimensions,
+  type Collection,
+  type Product,
 } from '../data'
 import { Poster } from '../components/Poster'
 import { ProductCard } from '../components/ProductCard'
@@ -32,7 +36,30 @@ interface ProductPageProps {
 
 export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
   const { slug } = useParams<{ slug: string }>()
-  const p = products.find((x) => x.slug === slug)
+
+  // Reactive Convex query for product by slug
+  const liveDbProduct = useQuery(api.products.getBySlug, { slug: slug || '' })
+  const staticProduct = staticProducts.find((x) => x.slug === slug)
+
+  const p: Product | undefined = liveDbProduct
+    ? {
+        id: liveDbProduct._id,
+        slug: liveDbProduct.slug,
+        sku: liveDbProduct.sku,
+        name: liveDbProduct.name,
+        collection: liveDbProduct.collection as Collection,
+        description: liveDbProduct.description,
+        colors: liveDbProduct.colors as [string, string, string],
+        motif: liveDbProduct.motif as Product['motif'],
+        renderMode: (liveDbProduct.renderMode as 'image' | 'procedural') || (liveDbProduct.thumbnailUrl ? 'image' : 'procedural'),
+        thumbnailUrl: liveDbProduct.thumbnailUrl,
+        galleryUrls: liveDbProduct.galleryUrls,
+        lifestyleUrls: liveDbProduct.lifestyleUrls,
+      }
+    : staticProduct
+
+  const [fitMode, setFitMode] = useState<'cover' | 'contain'>('cover')
+  const [activeMediaUrl, setActiveMediaUrl] = useState<string | null>(null)
 
   const [size, setSize] = useState<PosterSize>('A3')
   const [finish, setFinish] = useState<PosterFinish>('Matte')
@@ -42,12 +69,34 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
     'paper'
   )
 
+  if (liveDbProduct === null && !staticProduct) {
+    return (
+      <section className="section" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="customer-restricted-card" role="alert">
+          <span className="restricted-eyebrow">CATALOGUE NOTICE</span>
+          <h3>PRINT CURRENTLY UNAVAILABLE</h3>
+          <p>
+            The requested artwork is either currently under studio curation or has been archived from the active public edition.
+          </p>
+          <div className="restricted-footer-actions">
+            <Link to="/shop" className="button blue">
+              <span>EXPLORE ACTIVE PRINTS</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   if (!p) {
     return <Navigate to="/shop" replace />
   }
 
-  // Dynamic pricing based on selected size AND finish
-  const unitPrice = getProductPrice(size, finish)
+  // Dynamic pricing based on authoritative Convex prices or static fallback
+  const pricesMap = liveDbProduct?.prices || prices
+  const finishSurchargesMap = liveDbProduct?.finishSurcharges || finishPrices
+  const unitPrice = (pricesMap[size] || 249) + (finishSurchargesMap[finish] || 0)
   const totalPrice = unitPrice * qty
 
   const handleAddToCart = () => {
@@ -64,7 +113,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
   }
 
   // Related products from the same or different collections, excluding current
-  const related = products
+  const related = staticProducts
     .filter((x) => x.id !== p.id)
     .sort((a) => (a.collection === p.collection ? -1 : 1))
     .slice(0, 3)
@@ -119,8 +168,70 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
         {/* Left: Poster Stage */}
         <div className="product-stage">
           <div className="product-stage-inner">
-            <Poster p={p} large />
+            <Poster
+              p={activeMediaUrl ? { ...p, thumbnailUrl: activeMediaUrl } : p}
+              large
+              objectFit={fitMode}
+            />
           </div>
+
+          {/* Media Views Switcher (if gallery or lifestyle mockups exist) */}
+          {((p.galleryUrls && p.galleryUrls.length > 0) || (p.lifestyleUrls && p.lifestyleUrls.length > 0)) && (
+            <div className="media-views-row" style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+              <button
+                type="button"
+                className={`button small ${(!activeMediaUrl || activeMediaUrl === p.thumbnailUrl) ? 'blue' : 'outline'}`}
+                onClick={() => setActiveMediaUrl(p.thumbnailUrl || null)}
+                style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }}
+              >
+                MAIN PRINT
+              </button>
+              {p.galleryUrls?.map((url, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`button small ${activeMediaUrl === url ? 'blue' : 'outline'}`}
+                  onClick={() => setActiveMediaUrl(url)}
+                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }}
+                >
+                  DETAIL {idx + 1}
+                </button>
+              ))}
+              {p.lifestyleUrls?.map((url, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`button small ${activeMediaUrl === url ? 'blue' : 'outline'}`}
+                  onClick={() => setActiveMediaUrl(url)}
+                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }}
+                >
+                  ROOM {idx + 1}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Fit Toggle for Image Mode */}
+          {p.renderMode === 'image' && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                className={`button ghost small ${fitMode === 'cover' ? 'active' : ''}`}
+                onClick={() => setFitMode('cover')}
+                style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: fitMode === 'cover' ? 1 : 0.6 }}
+              >
+                FRAME FIT
+              </button>
+              <button
+                type="button"
+                className={`button ghost small ${fitMode === 'contain' ? 'active' : ''}`}
+                onClick={() => setFitMode('contain')}
+                style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', opacity: fitMode === 'contain' ? 1 : 0.6 }}
+              >
+                FULL POSTER
+              </button>
+            </div>
+          )}
 
           <div className="palette-breakdown">
             <span className="palette-label">STUDIO PALETTE</span>

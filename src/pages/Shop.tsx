@@ -1,11 +1,14 @@
 import React from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react'
+import { useQuery } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 import {
   collections,
   collectionDescriptions,
-  products,
+  products as staticProducts,
   type Collection,
+  type Product,
 } from '../data'
 import { ProductCard } from '../components/ProductCard'
 
@@ -19,10 +22,30 @@ export const Shop: React.FC = () => {
     ? (slug as Collection)
     : 'all'
 
-  const filteredProducts =
-    activeFilter === 'all'
-      ? products
-      : products.filter((p) => p.collection === activeFilter)
+  // Reactive Convex Storefront Query: Published products only
+  const liveItems = useQuery(api.products.list, {
+    collection: activeFilter !== 'all' ? activeFilter : undefined,
+  })
+
+  // All published products for accurate category tab counts
+  const allPublishedItems = useQuery(api.products.list, {})
+
+  const displayedProducts: Product[] = liveItems
+    ? liveItems.map((p) => ({
+        id: p._id,
+        slug: p.slug,
+        sku: p.sku,
+        name: p.name,
+        collection: p.collection as Collection,
+        description: p.description,
+        colors: p.colors as [string, string, string],
+        motif: p.motif as Product['motif'],
+        renderMode: (p.renderMode as 'image' | 'procedural') || (p.thumbnailUrl ? 'image' : 'procedural'),
+        thumbnailUrl: p.thumbnailUrl,
+      }))
+    : activeFilter === 'all'
+      ? staticProducts
+      : staticProducts.filter((p) => p.collection === activeFilter)
 
   const handleFilterClick = (filter: 'all' | Collection) => {
     if (filter === 'all') {
@@ -32,11 +55,17 @@ export const Shop: React.FC = () => {
     }
   }
 
-  // Count items per collection
+  // Count items per collection (using live data if available, fallback to static)
   const getCount = (col: 'all' | Collection) => {
-    if (col === 'all') return products.length
-    return products.filter((p) => p.collection === col).length
+    if (allPublishedItems) {
+      if (col === 'all') return allPublishedItems.length
+      return allPublishedItems.filter((p) => p.collection === col).length
+    }
+    if (col === 'all') return staticProducts.length
+    return staticProducts.filter((p) => p.collection === col).length
   }
+
+  const totalArchivalCount = allPublishedItems ? allPublishedItems.length : staticProducts.length
 
   return (
     <section className="shop section">
@@ -54,7 +83,7 @@ export const Shop: React.FC = () => {
         </div>
 
         <p className="eyebrow">
-          THE FIRST EDITION / {products.length} ARCHIVAL PRINTS
+          THE FIRST EDITION / {totalArchivalCount} ARCHIVAL PRINTS
         </p>
 
         <h1 className="shop-title">
@@ -114,13 +143,13 @@ export const Shop: React.FC = () => {
 
       <div className="results-summary">
         <span className="results-count">
-          SHOWING {filteredProducts.length}{' '}
-          {filteredProducts.length === 1 ? 'PRINT' : 'PRINTS'}
+          SHOWING {displayedProducts.length}{' '}
+          {displayedProducts.length === 1 ? 'PRINT' : 'PRINTS'}
           {activeFilter !== 'all' && ` IN ${collections[activeFilter]}`}
         </span>
       </div>
 
-      {filteredProducts.length === 0 ? (
+      {displayedProducts.length === 0 ? (
         <div className="empty-state">
           <p className="empty-title">No prints found in this selection.</p>
           <p className="empty-desc">
@@ -132,12 +161,12 @@ export const Shop: React.FC = () => {
             onClick={() => handleFilterClick('all')}
           >
             <ArrowLeft size={16} />
-            <span>SHOW ALL 12 PRINTS</span>
+            <span>SHOW ALL PRINTS</span>
           </button>
         </div>
       ) : (
         <div className="product-grid">
-          {filteredProducts.map((p) => (
+          {displayedProducts.map((p) => (
             <ProductCard key={p.id} p={p} />
           ))}
         </div>

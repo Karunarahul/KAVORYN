@@ -7,7 +7,13 @@ export default defineSchema({
     name: v.string(),
     description: v.string(),
     displayOrder: v.number(),
-  }).index('by_slug', ['slug']),
+    imageStorageId: v.optional(v.id('_storage')),
+    published: v.optional(v.boolean()),
+    createdAt: v.optional(v.number()),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_slug', ['slug'])
+    .index('by_display_order', ['displayOrder']),
 
   products: defineTable({
     slug: v.string(),
@@ -17,7 +23,18 @@ export default defineSchema({
     description: v.string(),
     colors: v.array(v.string()),
     motif: v.string(),
+    renderMode: v.optional(v.union(v.literal('image'), v.literal('procedural'))),
     active: v.boolean(),
+    status: v.optional(v.union(v.literal('draft'), v.literal('published'), v.literal('archived'))),
+    publishedAt: v.optional(v.number()),
+    archivedAt: v.optional(v.number()),
+    createdAt: v.optional(v.number()),
+    updatedAt: v.optional(v.number()),
+    tags: v.optional(v.array(v.string())),
+    thumbnailStorageId: v.optional(v.id('_storage')),
+    printMasterStorageId: v.optional(v.id('_storage')),
+    galleryStorageIds: v.optional(v.array(v.id('_storage'))),
+    lifestyleStorageIds: v.optional(v.array(v.id('_storage'))),
     prices: v.object({
       A4: v.number(),
       A3: v.number(),
@@ -33,7 +50,8 @@ export default defineSchema({
   })
     .index('by_slug', ['slug'])
     .index('by_sku', ['sku'])
-    .index('by_collection', ['collection']),
+    .index('by_collection', ['collection'])
+    .index('by_status', ['status']),
 
   orders: defineTable({
     orderNumber: v.string(),
@@ -186,4 +204,51 @@ export default defineSchema({
     currency: v.string(),
     updatedAt: v.number(),
   }).index('by_key', ['key']),
+
+  catalogueImportJobs: defineTable({
+    jobId: v.string(),
+    actorClerkId: v.string(),
+    actorEmail: v.string(),
+    status: v.union(
+      v.literal('uploaded'),
+      v.literal('validating'),
+      v.literal('validation_completed'),
+      v.literal('awaiting_confirmation'),
+      v.literal('uploading_assets'),
+      v.literal('importing_products'),
+      v.literal('completed'),
+      v.literal('partially_failed'),
+      v.literal('failed'),
+      v.literal('cancelled')
+    ),
+    totalRecords: v.number(),
+    validRecords: v.number(),
+    failedRecords: v.number(),
+    csvFileName: v.string(),
+    zipFileName: v.optional(v.string()),
+    importedProductIds: v.array(v.id('products')),
+    errorLog: v.optional(
+      v.array(
+        v.object({
+          row: v.number(),
+          sku: v.string(),
+          field: v.string(),
+          message: v.string(),
+        })
+      )
+    ),
+    summary: v.optional(
+      v.object({
+        newProductsCreated: v.number(),
+        assetsUploaded: v.number(),
+        skippedCount: v.number(),
+      })
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_job_id', ['jobId'])
+    .index('by_status', ['status'])
+    .index('by_created_at', ['createdAt']),
 })

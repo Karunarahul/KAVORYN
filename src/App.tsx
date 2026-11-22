@@ -33,6 +33,9 @@ const AdminPage = lazy(() => import('./pages/Admin').then((m) => ({ default: m.A
 const SuperAdminPage = lazy(() =>
   import('./pages/SuperAdmin').then((m) => ({ default: m.SuperAdminPage }))
 )
+const AdminCataloguePage = lazy(() =>
+  import('./pages/admin/AdminCatalogue').then((m) => ({ default: m.AdminCataloguePage }))
+)
 const OrderSuccess = lazy(() =>
   import('./pages/OrderSuccess').then((m) => ({ default: m.OrderSuccess }))
 )
@@ -82,29 +85,34 @@ function RoleBasedAuthNavigator() {
       if (handledRef.current !== userKey) {
         handledRef.current = userKey
 
-        const email = user.primaryEmailAddress?.emailAddress
+        const email = (
+          user.primaryEmailAddress?.emailAddress ||
+          user.emailAddresses?.[0]?.emailAddress ||
+          ''
+        ).trim().toLowerCase()
         const name = user.fullName || undefined
-        storeBackend
-          .syncUser({ email, name })
-          .then(() => storeBackend.getCurrentUser(email))
-          .then((currentUser) => {
-            if (!currentUser) return
-            const path = location.pathname
 
-            // Authoritative server-side role based navigation
-            if (currentUser.role === 'super_admin') {
-              if (path === '/' || path === '/admin' || path === '/signin' || path === '/login' || path === '/profile') {
-                navigate('/super-admin')
-              }
-            } else if (currentUser.role === 'admin') {
-              if (path === '/' || path === '/super-admin' || path === '/signin' || path === '/login') {
-                navigate('/admin')
-              }
+        const runAuthRouting = async () => {
+          await storeBackend.syncUser({ email, name })
+          const currentUser = await storeBackend.getCurrentUser(email)
+          if (!currentUser) return
+          const path = location.pathname
+
+          // Authoritative server-side role based navigation
+          if (currentUser.role === 'super_admin') {
+            if (path === '/' || path === '/admin' || path === '/signin' || path === '/login' || path === '/profile') {
+              navigate('/super-admin')
             }
-          })
-          .catch((err: unknown) => {
-            console.warn('Role navigation error:', err)
-          })
+          } else if (currentUser.role === 'admin') {
+            if (path === '/' || path === '/super-admin' || path === '/signin' || path === '/login') {
+              navigate('/admin')
+            }
+          }
+        }
+
+        runAuthRouting().catch((err: unknown) => {
+          console.warn('Role navigation error:', err)
+        })
       }
     } else {
       handledRef.current = null
@@ -211,7 +219,9 @@ export function App() {
             <Route path="/profile" element={<ProfilePage />} />
             {/* Dedicated administrative portals */}
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/catalogue" element={<AdminCataloguePage />} />
             <Route path="/super-admin" element={<SuperAdminPage />} />
+            <Route path="/super-admin/catalogue" element={<AdminCataloguePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

@@ -12,6 +12,7 @@ import {
   ExternalLink,
   History,
   KeyRound,
+  Layers,
   Lock,
   Package,
   RefreshCw,
@@ -45,6 +46,14 @@ import { isClerkConfigured } from '../lib/env'
 export const SuperAdminPage: React.FC = () => {
   const { user, isLoaded } = useUser()
   const navigate = useNavigate()
+
+  const currentEmail = (
+    user?.primaryEmailAddress?.emailAddress ||
+    user?.emailAddresses?.[0]?.emailAddress ||
+    ''
+  ).trim().toLowerCase()
+  const isAuthorizedSuperEmail =
+    currentEmail === 'karunarahul8885@gmail.com' || currentEmail === 'admin@kavoryn.com'
 
   const [activeTab, setActiveTab] = useState<
     | 'overview'
@@ -108,18 +117,38 @@ export const SuperAdminPage: React.FC = () => {
   const [orderSearchQuery, setOrderSearchQuery] = useState('')
 
   const loadAllData = async () => {
+    setIsSyncing(true)
     try {
-      const email = user?.primaryEmailAddress?.emailAddress
+      const email = (
+        user?.primaryEmailAddress?.emailAddress ||
+        user?.emailAddresses?.[0]?.emailAddress ||
+        ''
+      ).trim().toLowerCase()
       const name = user?.fullName || undefined
+      const isAuthorizedSuperEmail =
+        email === 'karunarahul8885@gmail.com' || email === 'admin@kavoryn.com'
+
       if (user) {
         try {
-          await storeBackend.bootstrapSuperAdmin({ email, name })
-        } catch {
-          // Fall back to standard sync if not in bootstrap allowlist
+          if (isAuthorizedSuperEmail) {
+            await storeBackend.bootstrapSuperAdmin({ email, name })
+          }
+          await storeBackend.syncUser({ email, name })
+        } catch (e) {
+          console.warn('Sync notice:', e)
         }
-        await storeBackend.syncUser({ email, name })
       }
-      const currentUser = await storeBackend.getCurrentUser(email)
+
+      let currentUser = await storeBackend.getCurrentUser(email)
+      if (isAuthorizedSuperEmail && currentUser?.role !== 'super_admin') {
+        try {
+          await storeBackend.bootstrapSuperAdmin({ email, name })
+          await storeBackend.syncUser({ email, name })
+          currentUser = await storeBackend.getCurrentUser(email)
+        } catch (e) {
+          console.warn('Auto-bootstrap retry notice:', e)
+        }
+      }
       setDbUser(currentUser)
 
       // Only fetch full administrative data if authorized as super_admin
@@ -270,50 +299,108 @@ export const SuperAdminPage: React.FC = () => {
   })
 
   // Denied Views
-  const renderCustomerDeniedView = () => (
-    <div className="customer-restricted-card" role="alert">
-      <div className="restricted-badge-wrap">
-        <ShieldAlert size={36} />
-      </div>
-      <span className="restricted-eyebrow">UNAUTHORIZED ACCESS</span>
-      <h3>SUPER ADMIN CONSOLE RESTRICTED</h3>
-      <p>
-        Your account (<strong>{user?.primaryEmailAddress?.emailAddress}</strong>) is currently designated with role{' '}
-        <span className="role-pill role-customer">CUSTOMER</span>.
-        Super Admin permissions (user roles, access approvals, payment diagnostics, and audit logs) are restricted to authorized studio leadership.
-      </p>
-      <div className="restricted-footer-actions">
-        <Link to="/profile" className="button outline">
-          <span>GO TO CLIENT PROFILE</span>
-        </Link>
-        <Link to="/" className="button blue">
-          <span>RETURN TO STOREFRONT</span>
-          <ArrowRight size={14} />
-        </Link>
-      </div>
-    </div>
-  )
+  const renderCustomerDeniedView = () => {
+    const currentEmail = (
+      user?.primaryEmailAddress?.emailAddress ||
+      user?.emailAddresses?.[0]?.emailAddress ||
+      ''
+    ).trim().toLowerCase()
+    const isAuthorizedSuperEmail =
+      currentEmail === 'karunarahul8885@gmail.com' || currentEmail === 'admin@kavoryn.com'
 
-  const renderAdminDeniedView = () => (
-    <div className="customer-restricted-card" role="alert">
-      <div className="restricted-badge-wrap">
-        <AlertTriangle size={36} />
+    if (isAuthorizedSuperEmail) {
+      return (
+        <div className="customer-restricted-card" role="alert">
+          <div className="restricted-badge-wrap" style={{ background: 'rgba(59, 130, 246, 0.12)', borderColor: 'var(--color-blue)' }}>
+            <ShieldCheck size={36} color="var(--color-blue)" />
+          </div>
+          <span className="restricted-eyebrow" style={{ color: 'var(--color-blue)' }}>EXECUTIVE IDENTITY RECOGNIZED</span>
+          <h3>SUPER ADMIN ACTIVATION</h3>
+          <p>
+            Authorized Super Admin identity (<strong>{currentEmail}</strong>) confirmed.
+            Click below to establish your permanent executive session.
+          </p>
+          <div className="restricted-footer-actions">
+            <button
+              type="button"
+              className="button blue"
+              onClick={async () => {
+                setIsSyncing(true)
+                try {
+                  await storeBackend.bootstrapSuperAdmin({ email: currentEmail, name: user?.fullName || undefined })
+                  await storeBackend.syncUser({ email: currentEmail, name: user?.fullName || undefined })
+                  await loadAllData()
+                  notify('Super Admin executive session successfully established.')
+                } catch (err: unknown) {
+                  notifyErr(err)
+                  setIsSyncing(false)
+                }
+              }}
+            >
+              <ShieldCheck size={16} />
+              <span>ACTIVATE SUPER ADMIN ROLE</span>
+            </button>
+            <Link to="/" className="button outline">
+              <span>RETURN TO STOREFRONT</span>
+            </Link>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="customer-restricted-card" role="alert">
+        <div className="restricted-badge-wrap">
+          <ShieldAlert size={36} />
+        </div>
+        <span className="restricted-eyebrow">UNAUTHORIZED ACCESS</span>
+        <h3>SUPER ADMIN CONSOLE RESTRICTED</h3>
+        <p>
+          Your account (<strong>{currentEmail || 'Anonymous'}</strong>) is currently designated with role{' '}
+          <span className="role-pill role-customer">CUSTOMER</span>.
+          Super Admin permissions (user roles, access approvals, payment diagnostics, and audit logs) are restricted to authorized studio leadership.
+        </p>
+        <div className="restricted-footer-actions">
+          <Link to="/profile" className="button outline">
+            <span>GO TO CLIENT PROFILE</span>
+          </Link>
+          <Link to="/" className="button blue">
+            <span>RETURN TO STOREFRONT</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
       </div>
-      <span className="restricted-eyebrow">SUPER ADMIN PRIVILEGES REQUIRED</span>
-      <h3>STUDIO ADMIN ACCESS LEVEL</h3>
-      <p>
-        Your account (<strong>{user?.primaryEmailAddress?.emailAddress}</strong>) has{' '}
-        <span className="role-pill role-admin">STUDIO ADMIN</span> privileges.
-        Full Super Admin capabilities (role management, audit logs, and gateway diagnostics) require Super Admin clearance.
-      </p>
-      <div className="restricted-footer-actions">
-        <button type="button" className="button blue" onClick={() => navigate('/admin')}>
-          <span>GO TO STUDIO OPERATIONS (/admin)</span>
-          <ArrowRight size={14} />
-        </button>
+    )
+  }
+
+  const renderAdminDeniedView = () => {
+    const currentEmail = (
+      user?.primaryEmailAddress?.emailAddress ||
+      user?.emailAddresses?.[0]?.emailAddress ||
+      ''
+    ).trim().toLowerCase()
+
+    return (
+      <div className="customer-restricted-card" role="alert">
+        <div className="restricted-badge-wrap">
+          <AlertTriangle size={36} />
+        </div>
+        <span className="restricted-eyebrow">SUPER ADMIN PRIVILEGES REQUIRED</span>
+        <h3>STUDIO ADMIN ACCESS LEVEL</h3>
+        <p>
+          Your account (<strong>{currentEmail}</strong>) has{' '}
+          <span className="role-pill role-admin">STUDIO ADMIN</span> privileges.
+          Full Super Admin capabilities (role management, audit logs, and gateway diagnostics) require Super Admin clearance.
+        </p>
+        <div className="restricted-footer-actions">
+          <button type="button" className="button blue" onClick={() => navigate('/admin')}>
+            <span>GO TO STUDIO OPERATIONS (/admin)</span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="super-admin-page section">
@@ -422,7 +509,7 @@ export const SuperAdminPage: React.FC = () => {
           </Show>
 
           <Show when="signed-in">
-            {isSyncing ? (
+            {isSyncing || (isAuthorizedSuperEmail && dbUser?.role !== 'super_admin') ? (
               <div className="profile-loading" role="status">
                 <RefreshCw size={24} className="spinner" />
                 <span>VERIFYING SUPER ADMIN AUTHORIZATION...</span>
@@ -748,7 +835,13 @@ export const SuperAdminPage: React.FC = () => {
                   <div className="admin-panel">
                     <div className="panel-toolbar">
                       <h3>PRODUCT CATALOG & DESIGN EDITIONS</h3>
-                      <span className="panel-counter">{products.length} FIRST EDITION PRINTS</span>
+                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                        <Link to="/super-admin/catalogue" className="button blue">
+                          <Layers size={14} />
+                          <span>FULL CATALOGUE MANAGER</span>
+                        </Link>
+                        <span className="panel-counter">{products.length} FIRST EDITION PRINTS</span>
+                      </div>
                     </div>
 
                     <div className="admin-table-wrap">

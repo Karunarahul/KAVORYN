@@ -16,7 +16,20 @@ import type { PosterSize } from '../types'
 import { convexUrl, isConvexConfigured } from './env'
 
 export interface DBProduct extends Product {
+  _id?: string
   active: boolean
+  status?: 'draft' | 'published' | 'archived'
+  publishedAt?: number
+  archivedAt?: number
+  createdAt?: number
+  updatedAt?: number
+  tags?: string[]
+  thumbnailStorageId?: string
+  printMasterStorageId?: string
+  galleryStorageIds?: string[]
+  lifestyleStorageIds?: string[]
+  thumbnailUrl?: string | null
+  printMasterUrl?: string | null
   prices: Record<PosterSize, number>
   finishSurcharges: Record<PosterFinish, number>
 }
@@ -191,6 +204,42 @@ export const RAZORPAY_TEST_KEY_ID =
 export const storeBackend = {
   // --- Products & Collections ---
   async getProducts(collection?: string): Promise<DBProduct[]> {
+    if (isConvexConfigured && convexClient) {
+      try {
+        const live = await convexClient.query(api.products.list, {
+          collection: collection && collection !== 'all' ? collection : undefined,
+        })
+        if (live && live.length > 0) {
+          return live.map((p) => ({
+            id: p._id,
+            _id: p._id,
+            slug: p.slug,
+            sku: p.sku,
+            name: p.name,
+            collection: p.collection as Collection,
+            description: p.description,
+            colors: p.colors as [string, string, string],
+            motif: p.motif as Product['motif'],
+            renderMode: (p.renderMode as 'image' | 'procedural') || (p.thumbnailUrl ? 'image' : 'procedural'),
+            active: p.active,
+            status: (p.status || 'published') as 'draft' | 'published' | 'archived',
+            thumbnailUrl: p.thumbnailUrl,
+            thumbnailStorageId: p.thumbnailStorageId,
+            galleryUrls: p.galleryUrls,
+            lifestyleUrls: p.lifestyleUrls,
+            prices: p.prices,
+            finishSurcharges: p.finishSurcharges || { Matte: 0, Gloss: 50 },
+            tags: p.tags,
+            createdAt: p.createdAt,
+            updatedAt: p.updatedAt,
+            publishedAt: p.publishedAt,
+            archivedAt: p.archivedAt,
+          }))
+        }
+      } catch (err) {
+        console.warn('Convex products.list query error, falling back to local dataset:', err)
+      }
+    }
     const products = getStored<DBProduct[]>(STORAGE_PRODUCTS, INITIAL_DB_PRODUCTS)
     const active = products.filter((p) => p.active)
     if (collection && collection !== 'all') {
@@ -199,18 +248,265 @@ export const storeBackend = {
     return active
   },
 
+  async getProductBySlug(slug: string): Promise<DBProduct | null> {
+    if (isConvexConfigured && convexClient) {
+      try {
+        const live = await convexClient.query(api.products.getBySlug, { slug })
+        if (live) {
+          return {
+            id: live._id,
+            _id: live._id,
+            slug: live.slug,
+            sku: live.sku,
+            name: live.name,
+            collection: live.collection as Collection,
+            description: live.description,
+            colors: live.colors as [string, string, string],
+            motif: live.motif as Product['motif'],
+            renderMode: (live.renderMode as 'image' | 'procedural') || (live.thumbnailUrl ? 'image' : 'procedural'),
+            active: live.active,
+            status: (live.status || 'published') as 'draft' | 'published' | 'archived',
+            thumbnailUrl: live.thumbnailUrl,
+            printMasterUrl: live.printMasterUrl,
+            thumbnailStorageId: live.thumbnailStorageId,
+            printMasterStorageId: live.printMasterStorageId,
+            galleryUrls: live.galleryUrls,
+            lifestyleUrls: live.lifestyleUrls,
+            prices: live.prices,
+            finishSurcharges: live.finishSurcharges || { Matte: 0, Gloss: 50 },
+            tags: live.tags,
+            createdAt: live.createdAt,
+            updatedAt: live.updatedAt,
+            publishedAt: live.publishedAt,
+            archivedAt: live.archivedAt,
+          }
+        }
+      } catch (err) {
+        console.warn('Convex products.getBySlug query error:', err)
+      }
+    }
+    const staticItem = staticProducts.find((p) => p.slug === slug)
+    if (!staticItem) return null
+    return {
+      ...staticItem,
+      active: true,
+      status: 'published',
+      prices: basePrices,
+      finishSurcharges: finishPrices,
+    }
+  },
+
   async getAllProductsForAdmin(): Promise<DBProduct[]> {
+    if (isConvexConfigured && convexClient) {
+      try {
+        const live = await convexClient.query(api.products.adminListAll, {})
+        if (live) {
+          return live.map((p) => ({
+            id: p._id,
+            _id: p._id,
+            slug: p.slug,
+            sku: p.sku,
+            name: p.name,
+            collection: p.collection as Collection,
+            description: p.description,
+            colors: p.colors as [string, string, string],
+            motif: p.motif as Product['motif'],
+            renderMode: (p.renderMode as 'image' | 'procedural') || (p.thumbnailUrl ? 'image' : 'procedural'),
+            active: p.active,
+            status: (p.status || 'published') as 'draft' | 'published' | 'archived',
+            thumbnailUrl: p.thumbnailUrl,
+            printMasterUrl: p.printMasterUrl,
+            thumbnailStorageId: p.thumbnailStorageId,
+            printMasterStorageId: p.printMasterStorageId,
+            galleryUrls: p.galleryUrls,
+            lifestyleUrls: p.lifestyleUrls,
+            prices: p.prices,
+            finishSurcharges: p.finishSurcharges || { Matte: 0, Gloss: 50 },
+            tags: p.tags,
+            createdAt: p.createdAt,
+            updatedAt: p.updatedAt,
+            publishedAt: p.publishedAt,
+            archivedAt: p.archivedAt,
+          }))
+        }
+      } catch (err) {
+        console.warn('Convex products.adminListAll query error, fallback to local dataset:', err)
+      }
+    }
     return getStored<DBProduct[]>(STORAGE_PRODUCTS, INITIAL_DB_PRODUCTS)
   },
 
   async toggleProductActive(productId: string, active: boolean): Promise<boolean> {
+    if (isConvexConfigured && convexClient) {
+      try {
+        await convexClient.mutation(api.products.adminToggleActive, {
+          id: productId as unknown as Id<'products'>,
+          active,
+        })
+        return true
+      } catch (err) {
+        console.warn('Convex products.adminToggleActive error:', err)
+      }
+    }
     const products = getStored<DBProduct[]>(STORAGE_PRODUCTS, INITIAL_DB_PRODUCTS)
     const updated = products.map((p) => (p.id === productId ? { ...p, active } : p))
     setStored(STORAGE_PRODUCTS, updated)
     return true
   },
 
+  async adminCreateProduct(args: {
+    name: string
+    slug: string
+    sku: string
+    collection: string
+    description: string
+    colors: string[]
+    motif: string
+    renderMode?: 'image' | 'procedural'
+    prices: { A4: number; A3: number; A2: number; A1: number }
+    finishSurcharges?: { Matte: number; Gloss: number }
+    status: 'draft' | 'published'
+    tags?: string[]
+    thumbnailStorageId?: string
+    printMasterStorageId?: string
+    galleryStorageIds?: string[]
+    lifestyleStorageIds?: string[]
+  }): Promise<{ success: boolean; id?: string }> {
+    if (isConvexConfigured && convexClient) {
+      return (await convexClient.mutation(api.products.adminCreate, {
+        name: args.name,
+        slug: args.slug,
+        sku: args.sku,
+        collection: args.collection,
+        description: args.description,
+        colors: args.colors,
+        motif: args.motif,
+        renderMode: args.renderMode,
+        prices: args.prices,
+        finishSurcharges: args.finishSurcharges,
+        status: args.status,
+        tags: args.tags,
+        thumbnailStorageId: args.thumbnailStorageId as unknown as Id<'_storage'> | undefined,
+        printMasterStorageId: args.printMasterStorageId as unknown as Id<'_storage'> | undefined,
+        galleryStorageIds: args.galleryStorageIds as unknown as Id<'_storage'>[] | undefined,
+        lifestyleStorageIds: args.lifestyleStorageIds as unknown as Id<'_storage'>[] | undefined,
+      })) as { success: boolean; id?: string }
+    }
+    throw new Error('Convex backend required for catalogue product creation.')
+  },
+
+  async adminUpdateProduct(
+    id: string,
+    args: {
+      name?: string
+      collection?: string
+      description?: string
+      colors?: string[]
+      motif?: string
+      renderMode?: 'image' | 'procedural'
+      prices?: { A4: number; A3: number; A2: number; A1: number }
+      finishSurcharges?: { Matte: number; Gloss: number }
+      status?: 'draft' | 'published' | 'archived'
+      tags?: string[]
+      thumbnailStorageId?: string
+      printMasterStorageId?: string
+      galleryStorageIds?: string[]
+      lifestyleStorageIds?: string[]
+    }
+  ): Promise<{ success: boolean }> {
+    if (isConvexConfigured && convexClient) {
+      return await convexClient.mutation(api.products.adminUpdate, {
+        id: id as unknown as Id<'products'>,
+        name: args.name,
+        collection: args.collection,
+        description: args.description,
+        colors: args.colors,
+        motif: args.motif,
+        renderMode: args.renderMode,
+        prices: args.prices,
+        finishSurcharges: args.finishSurcharges,
+        status: args.status,
+        tags: args.tags,
+        thumbnailStorageId: args.thumbnailStorageId as unknown as Id<'_storage'> | undefined,
+        printMasterStorageId: args.printMasterStorageId as unknown as Id<'_storage'> | undefined,
+        galleryStorageIds: args.galleryStorageIds as unknown as Id<'_storage'>[] | undefined,
+        lifestyleStorageIds: args.lifestyleStorageIds as unknown as Id<'_storage'>[] | undefined,
+      })
+    }
+    throw new Error('Convex backend required for product updates.')
+  },
+
+  async getPrintMasterDownloadUrl(id: string): Promise<string | null> {
+    if (isConvexConfigured && convexClient) {
+      try {
+        return await convexClient.query(api.products.getPrintMasterDownloadUrl, {
+          id: id as unknown as Id<'products'>,
+        })
+      } catch (err) {
+        console.warn('Convex getPrintMasterDownloadUrl error:', err)
+      }
+    }
+    return null
+  },
+
+  async adminArchiveProduct(id: string): Promise<{ success: boolean }> {
+    if (isConvexConfigured && convexClient) {
+      return await convexClient.mutation(api.products.adminArchive, {
+        id: id as unknown as Id<'products'>,
+      })
+    }
+    throw new Error('Convex backend required for product archival.')
+  },
+
+  async adminRestoreProduct(
+    id: string,
+    restoreTo?: 'published' | 'draft'
+  ): Promise<{ success: boolean }> {
+    if (isConvexConfigured && convexClient) {
+      return await convexClient.mutation(api.products.adminRestore, {
+        id: id as unknown as Id<'products'>,
+        restoreTo,
+      })
+    }
+    throw new Error('Convex backend required for product restoration.')
+  },
+
+  async adminDeleteProduct(id: string): Promise<{ success: boolean }> {
+    if (isConvexConfigured && convexClient) {
+      return await convexClient.mutation(api.products.adminDelete, {
+        id: id as unknown as Id<'products'>,
+      })
+    }
+    throw new Error('Convex backend required for product deletion.')
+  },
+
+  async adminDuplicateProduct(id: string): Promise<{ success: boolean; id?: string }> {
+    if (isConvexConfigured && convexClient) {
+      return await convexClient.mutation(api.products.adminDuplicate, {
+        id: id as unknown as Id<'products'>,
+      })
+    }
+    throw new Error('Convex backend required for product duplication.')
+  },
+
+  async generateProductUploadUrl(): Promise<string> {
+    if (isConvexConfigured && convexClient) {
+      return await convexClient.mutation(api.products.generateUploadUrl, {})
+    }
+    throw new Error('Convex backend required for asset upload URLs.')
+  },
+
   async getCollections() {
+    if (isConvexConfigured && convexClient) {
+      try {
+        const live = await convexClient.query(api.products.listCollections, {})
+        if (live && live.length > 0) {
+          return live
+        }
+      } catch (err) {
+        console.warn('Convex products.listCollections query error:', err)
+      }
+    }
     return Object.entries(staticCollections).map(([slug, name], idx) => ({
       slug,
       name,

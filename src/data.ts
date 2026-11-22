@@ -10,6 +10,11 @@ export type Product = {
   description: string
   colors: [string, string, string]
   motif: string
+  renderMode?: 'image' | 'procedural'
+  thumbnailUrl?: string | null
+  printMasterUrl?: string | null
+  galleryUrls?: string[]
+  lifestyleUrls?: string[]
 }
 
 export const prices = {

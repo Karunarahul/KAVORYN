@@ -68,13 +68,16 @@ export async function getCurrentUserRecord(
   if (!identity) return null
 
   const clerkId = identity.subject
-  const email = (identity.email || clientEmail || '').trim().toLowerCase()
+  const verifiedEmail = identity.email ? identity.email.trim().toLowerCase() : ''
+  const email = (verifiedEmail || clientEmail || '').trim().toLowerCase()
   const name = identity.name || undefined
 
   const superEmails = getSuperAdminEmails()
   const superClerkIds = getSuperAdminClerkIds()
   const isAllowlistedSuper =
-    (email && superEmails.includes(email)) || superClerkIds.includes(clerkId)
+    superClerkIds.includes(clerkId) ||
+    (verifiedEmail && superEmails.includes(verifiedEmail)) ||
+    (email && superEmails.includes(email))
 
   if (!ctx.db) {
     const isAdminMock = !isAllowlistedSuper && (email.includes('admin') || email.includes('lead'))
@@ -89,10 +92,19 @@ export async function getCurrentUserRecord(
     }
   }
 
-  const existing = await ctx.db
+  // 1. Try lookup by Clerk subject ID
+  let existing = await ctx.db
     .query('users')
     .withIndex('by_clerk_id', (q) => q.eq('clerkId', clerkId))
     .first()
+
+  // 2. If not found by clerkId and email is known, try lookup by email index
+  if (!existing && email) {
+    existing = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .first()
+  }
 
   if (existing) {
     const effectiveEmail =

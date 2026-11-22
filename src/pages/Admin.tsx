@@ -74,12 +74,34 @@ export const AdminPage: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const email = user?.primaryEmailAddress?.emailAddress
+      const email = (
+        user?.primaryEmailAddress?.emailAddress ||
+        user?.emailAddresses?.[0]?.emailAddress ||
+        ''
+      ).trim().toLowerCase()
       const name = user?.fullName || undefined
+      const isAuthorizedSuperEmail =
+        email === 'karunarahul8885@gmail.com' || email === 'admin@kavoryn.com'
       if (user) {
+        if (isAuthorizedSuperEmail) {
+          try {
+            await storeBackend.bootstrapSuperAdmin({ email, name })
+          } catch (e) {
+            console.warn('Admin bootstrap notice:', e)
+          }
+        }
         await storeBackend.syncUser({ email, name })
       }
-      const currentUser = await storeBackend.getCurrentUser(email)
+      let currentUser = await storeBackend.getCurrentUser(email)
+      if (isAuthorizedSuperEmail && currentUser?.role !== 'super_admin') {
+        try {
+          await storeBackend.bootstrapSuperAdmin({ email, name })
+          await storeBackend.syncUser({ email, name })
+          currentUser = await storeBackend.getCurrentUser(email)
+        } catch (e) {
+          console.warn('Auto-bootstrap retry notice:', e)
+        }
+      }
       setDbUser(currentUser)
 
       if (currentUser?.role === 'customer') {
@@ -571,14 +593,22 @@ export const AdminPage: React.FC = () => {
         <div className="admin-panel">
           <div className="panel-toolbar">
             <h3>CATALOG ITEMS & ACTIVE STATUS</h3>
-            <button
-              type="button"
-              className="button acid seed-btn"
-              onClick={handleSeedDatabase}
-            >
-              <Database size={14} />
-              <span>RE-SEED CATALOG</span>
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <Link to="/admin/catalogue" className="button blue">
+                <Layers size={14} />
+                <span>CATALOGUE MANAGER</span>
+              </Link>
+              {dbUser?.role === 'super_admin' && (
+                <button
+                  type="button"
+                  className="button acid seed-btn"
+                  onClick={handleSeedDatabase}
+                >
+                  <Database size={14} />
+                  <span>RE-SEED CATALOG</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="admin-table-wrapper">

@@ -78,8 +78,13 @@ export const ProfilePage: React.FC = () => {
 
   const loadProfileData = async () => {
     try {
-      const email = clerkUser?.primaryEmailAddress?.emailAddress
+      const email = (
+        clerkUser?.primaryEmailAddress?.emailAddress ||
+        clerkUser?.emailAddresses?.[0]?.emailAddress ||
+        ''
+      ).trim().toLowerCase()
       const name = clerkUser?.fullName || undefined
+
       // 1. Sync Clerk user into Convex database
       if (clerkUser) {
         await storeBackend.syncUser({ email, name })

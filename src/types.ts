@@ -3,6 +3,8 @@ import type { Collection, PosterFinish, Product, prices } from './data'
 export type { Collection, PosterFinish, Product }
 export type PosterSize = keyof typeof prices
 
+export type ProductRenderMode = 'image' | 'procedural'
+
 export interface CartLine {
   product: Product
   size: PosterSize

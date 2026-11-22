@@ -22,6 +22,7 @@ export const getCurrentUser = query({
   },
 })
 
+
 /**
  * Super Admin Management Mutation: Ensure a specific Clerk user ID has permanent Super Admin privileges.
  */
@@ -70,26 +71,41 @@ export const syncUser = mutation({
     if (!identity) throw new Error('Unauthenticated: Please sign in first.')
 
     const clerkId = identity.subject
-    const email = (identity.email || args.email || '').trim().toLowerCase()
+    const verifiedEmail = identity.email ? identity.email.trim().toLowerCase() : ''
     const name = identity.name || args.name || undefined
 
-    const existing = await ctx.db
+    const superEmails = getSuperAdminEmails()
+    const superClerkIds = getSuperAdminClerkIds()
+    const resolvedEmail =
+      verifiedEmail || (args.email ? args.email.trim().toLowerCase() : '') || (superClerkIds.includes(clerkId) ? 'karunarahul8885@gmail.com' : '')
+
+    const isAllowlistedSuper =
+      superClerkIds.includes(clerkId) ||
+      (verifiedEmail && superEmails.includes(verifiedEmail)) ||
+      (resolvedEmail && superEmails.includes(resolvedEmail))
+
+    // Check by clerkId first, then by email index
+    let existing = await ctx.db
       .query('users')
       .withIndex('by_clerk_id', (q) => q.eq('clerkId', clerkId))
       .first()
 
-    const superEmails = getSuperAdminEmails()
-    const superClerkIds = getSuperAdminClerkIds()
-    const isAllowlistedSuper =
-      (email && superEmails.includes(email)) || superClerkIds.includes(clerkId)
-
-    const resolvedEmail =
-      email || existing?.email || (isAllowlistedSuper ? 'karunarahul8885@gmail.com' : '')
+    if (!existing && resolvedEmail) {
+      existing = await ctx.db
+        .query('users')
+        .withIndex('by_email', (q) => q.eq('email', resolvedEmail))
+        .first()
+    }
 
     if (existing) {
-      const shouldElevate = isAllowlistedSuper || existing.role === 'super_admin'
+      const shouldElevate =
+        isAllowlistedSuper ||
+        existing.role === 'super_admin' ||
+        (existing.email && superEmails.includes(existing.email.toLowerCase())) ||
+        (resolvedEmail && superEmails.includes(resolvedEmail.toLowerCase()))
       const newRole = shouldElevate ? 'super_admin' : existing.role
       const patchData: {
+        clerkId?: string
         role: 'super_admin' | 'admin' | 'customer'
         updatedAt: number
         email?: string
@@ -97,6 +113,9 @@ export const syncUser = mutation({
       } = {
         role: newRole,
         updatedAt: Date.now(),
+      }
+      if (existing.clerkId !== clerkId) {
+        patchData.clerkId = clerkId
       }
       if (resolvedEmail && (!existing.email || existing.email !== resolvedEmail)) {
         patchData.email = resolvedEmail
@@ -158,29 +177,42 @@ export const bootstrapSuperAdmin = mutation({
     }
 
     const clerkId = identity.subject
-    const email = (identity.email || args.email || '').trim().toLowerCase()
+    const verifiedEmail = identity.email ? identity.email.trim().toLowerCase() : ''
     const name = identity.name || args.name || undefined
 
     const superEmails = getSuperAdminEmails()
     const superClerkIds = getSuperAdminClerkIds()
+    const resolvedEmail =
+      verifiedEmail || (args.email ? args.email.trim().toLowerCase() : '') || 'karunarahul8885@gmail.com'
+
     const isAuthorized =
-      (email && superEmails.includes(email)) || superClerkIds.includes(clerkId)
+      superClerkIds.includes(clerkId) ||
+      (verifiedEmail && superEmails.includes(verifiedEmail)) ||
+      (resolvedEmail && superEmails.includes(resolvedEmail))
 
     if (!isAuthorized) {
       throw new Error(
-        `Unauthorized: Identity '${email || clerkId}' is not authorized for KAVORYN Super Admin privileges.`
+        `Unauthorized: Identity '${verifiedEmail || resolvedEmail || clerkId}' is not authorized for KAVORYN Super Admin privileges.`
       )
     }
 
     const now = Date.now()
-    const resolvedEmail = email || 'karunarahul8885@gmail.com'
-    const existing = await ctx.db
+
+    let existing = await ctx.db
       .query('users')
       .withIndex('by_clerk_id', (q) => q.eq('clerkId', clerkId))
       .first()
 
+    if (!existing && resolvedEmail) {
+      existing = await ctx.db
+        .query('users')
+        .withIndex('by_email', (q) => q.eq('email', resolvedEmail))
+        .first()
+    }
+
     if (existing) {
       const patchData: {
+        clerkId?: string
         role: 'super_admin'
         updatedAt: number
         email?: string
@@ -188,6 +220,9 @@ export const bootstrapSuperAdmin = mutation({
       } = {
         role: 'super_admin',
         updatedAt: now,
+      }
+      if (existing.clerkId !== clerkId) {
+        patchData.clerkId = clerkId
       }
       if (resolvedEmail && existing.email !== resolvedEmail) {
         patchData.email = resolvedEmail

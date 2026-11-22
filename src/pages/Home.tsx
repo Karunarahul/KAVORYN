@@ -1,13 +1,31 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Sparkles, ShieldCheck, Truck, Frame } from 'lucide-react'
-import { collections, collectionDescriptions, products } from '../data'
+import { useQuery } from 'convex/react'
+import { api } from '../../convex/_generated/api'
+import { collections, collectionDescriptions, products as staticProducts, type Collection, type Product } from '../data'
 import { Poster } from '../components/Poster'
 import { ProductCard } from '../components/ProductCard'
 
 export const Home: React.FC = () => {
-  const featured = products.slice(0, 6)
-  const heroPosterProduct = products[5] // 'Make It Matter'
+  const liveItems = useQuery(api.products.list, {})
+
+  const featured: Product[] = liveItems && liveItems.length > 0
+    ? liveItems.slice(0, 6).map((p) => ({
+        id: p._id,
+        slug: p.slug,
+        sku: p.sku,
+        name: p.name,
+        collection: p.collection as Collection,
+        description: p.description,
+        colors: p.colors as [string, string, string],
+        motif: p.motif as Product['motif'],
+        renderMode: (p.renderMode as 'image' | 'procedural') || (p.thumbnailUrl ? 'image' : 'procedural'),
+        thumbnailUrl: p.thumbnailUrl,
+      }))
+    : staticProducts.slice(0, 6)
+
+  const heroPosterProduct = featured[5] || staticProducts[5]
 
   const marqueeText =
     'FORM — FRAME — TYPE — ELSEWHERE — ORGANIC — PERSONAL — 230 GSM ARCHIVAL PAPER — PRINTED IN INDIA — MAKE YOUR WALLS SPEAK — '

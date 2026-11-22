@@ -111,7 +111,18 @@ export const SuperAdminPage: React.FC = () => {
     setIsSyncing(true)
     try {
       if (user) {
-        await storeBackend.syncUser()
+        try {
+          await storeBackend.bootstrapSuperAdmin({
+            email: user?.primaryEmailAddress?.emailAddress,
+            name: user?.fullName || undefined,
+          })
+        } catch {
+          // Fall back to standard sync if not in bootstrap allowlist
+        }
+        await storeBackend.syncUser({
+          email: user?.primaryEmailAddress?.emailAddress,
+          name: user?.fullName || undefined,
+        })
       }
       const currentUser = await storeBackend.getCurrentUser()
       setDbUser(currentUser)

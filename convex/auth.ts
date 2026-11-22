@@ -22,6 +22,23 @@ export function getSuperAdminEmails(): string[] {
 }
 
 /**
+ * Super Admin Verified Clerk User ID Allowlist
+ * Configurable via Convex environment variable SUPER_ADMIN_CLERK_IDS
+ */
+export function getSuperAdminClerkIds(): string[] {
+  const envIds = process.env.SUPER_ADMIN_CLERK_IDS || ''
+  const parsed = envIds
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean)
+  // Permanent authorized Clerk User ID for karunarahul8885@gmail.com
+  if (!parsed.includes('user_3MRF4pYoolWnkVAEHIjgvXc6VYs')) {
+    parsed.push('user_3MRF4pYoolWnkVAEHIjgvXc6VYs')
+  }
+  return parsed
+}
+
+/**
  * Get the current user record from the database.
  * If user does not exist yet, returns a virtual record with the appropriate default role.
  */
@@ -43,15 +60,18 @@ export async function getCurrentUserRecord(
   const email = (identity.email || '').trim().toLowerCase()
   const name = identity.name || undefined
 
+  const superEmails = getSuperAdminEmails()
+  const superClerkIds = getSuperAdminClerkIds()
+  const isAllowlistedSuper =
+    (email && superEmails.includes(email)) || superClerkIds.includes(clerkId)
+
   if (!ctx.db) {
-    const superEmails = getSuperAdminEmails()
-    const isAllowlistedSuper = email && superEmails.includes(email)
     const isAdminMock = !isAllowlistedSuper && (email.includes('admin') || email.includes('lead'))
     return {
       identity,
       user: {
         clerkId,
-        email,
+        email: email || (isAllowlistedSuper ? 'karunarahul8885@gmail.com' : ''),
         name,
         role: isAllowlistedSuper ? 'super_admin' : isAdminMock ? 'admin' : 'customer',
       },
@@ -64,32 +84,33 @@ export async function getCurrentUserRecord(
     .first()
 
   if (existing) {
-    // If user email is in super admin allowlist but role is not super_admin yet, elevate
-    const superEmails = getSuperAdminEmails()
-    const isAllowlistedSuper = email && superEmails.includes(email)
-    const effectiveRole = isAllowlistedSuper ? 'super_admin' : existing.role
+    const effectiveEmail =
+      existing.email || email || (isAllowlistedSuper ? 'karunarahul8885@gmail.com' : '')
+    const isEffectiveSuper =
+      isAllowlistedSuper ||
+      (effectiveEmail && superEmails.includes(effectiveEmail)) ||
+      existing.role === 'super_admin'
+    const effectiveRole = isEffectiveSuper ? 'super_admin' : existing.role
 
     return {
       identity,
       user: {
         clerkId: existing.clerkId,
-        email: existing.email,
-        name: existing.name,
+        email: effectiveEmail,
+        name: existing.name || name,
         role: effectiveRole,
       },
     }
   }
 
   // Not yet persisted in users table
-  const superEmails = getSuperAdminEmails()
-  const isSuper = Boolean(email && superEmails.includes(email))
-  const defaultRole = isSuper ? 'super_admin' : 'customer'
+  const defaultRole = isAllowlistedSuper ? 'super_admin' : 'customer'
 
   return {
     identity,
     user: {
       clerkId,
-      email,
+      email: email || (isAllowlistedSuper ? 'karunarahul8885@gmail.com' : ''),
       name,
       role: defaultRole,
     },

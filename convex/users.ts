@@ -2,6 +2,7 @@ import { mutation, query } from './_generated/server'
 import { v } from 'convex/values'
 import {
   getCurrentUserRecord,
+  getSuperAdminClerkIds,
   getSuperAdminEmails,
   requireCustomerAuth,
   requireSuperAdminAuth,
@@ -24,14 +25,17 @@ export const getCurrentUser = query({
  * Defaults all new users to 'customer' unless their email is allowlisted for Super Admin.
  */
 export const syncUser = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error('Unauthenticated: Please sign in first.')
 
     const clerkId = identity.subject
-    const email = (identity.email || '').trim().toLowerCase()
-    const name = identity.name || undefined
+    const email = (identity.email || args.email || '').trim().toLowerCase()
+    const name = identity.name || args.name || undefined
 
     const existing = await ctx.db
       .query('users')
@@ -39,23 +43,41 @@ export const syncUser = mutation({
       .first()
 
     const superEmails = getSuperAdminEmails()
-    const isAllowlistedSuper = email && superEmails.includes(email)
+    const superClerkIds = getSuperAdminClerkIds()
+    const isAllowlistedSuper =
+      (email && superEmails.includes(email)) || superClerkIds.includes(clerkId)
+
+    const resolvedEmail =
+      email || existing?.email || (isAllowlistedSuper ? 'karunarahul8885@gmail.com' : '')
 
     if (existing) {
-      if (isAllowlistedSuper && existing.role !== 'super_admin') {
-        await ctx.db.patch(existing._id, {
-          role: 'super_admin',
-          updatedAt: Date.now(),
-        })
-        return { ...existing, role: 'super_admin' as const }
+      const shouldElevate = isAllowlistedSuper || existing.role === 'super_admin'
+      const newRole = shouldElevate ? 'super_admin' : existing.role
+      const patchData: {
+        role: 'super_admin' | 'admin' | 'customer'
+        updatedAt: number
+        email?: string
+        name?: string
+      } = {
+        role: newRole,
+        updatedAt: Date.now(),
       }
-      return existing
+      if (resolvedEmail && (!existing.email || existing.email !== resolvedEmail)) {
+        patchData.email = resolvedEmail
+      }
+      if (name && !existing.name) {
+        patchData.name = name
+      }
+      await ctx.db.patch(existing._id, patchData)
+      return { ...existing, ...patchData }
     }
 
-    const initialRole: 'super_admin' | 'customer' = isAllowlistedSuper ? 'super_admin' : 'customer'
+    const initialRole: 'super_admin' | 'customer' = isAllowlistedSuper
+      ? 'super_admin'
+      : 'customer'
     const newUserId = await ctx.db.insert('users', {
       clerkId,
-      email,
+      email: resolvedEmail,
       name,
       role: initialRole,
       createdAt: Date.now(),
@@ -64,10 +86,10 @@ export const syncUser = mutation({
     if (initialRole === 'super_admin') {
       await ctx.db.insert('adminActivityLogs', {
         actorClerkId: clerkId,
-        actorEmail: email,
+        actorEmail: resolvedEmail,
         action: 'SUPER_ADMIN_BOOTSTRAP',
         targetId: clerkId,
-        details: `Super Admin account initialized for ${email}`,
+        details: `Super Admin account initialized for ${resolvedEmail || clerkId}`,
         timestamp: Date.now(),
       })
     }
@@ -75,7 +97,7 @@ export const syncUser = mutation({
     return {
       _id: newUserId,
       clerkId,
-      email,
+      email: resolvedEmail,
       name,
       role: initialRole,
       createdAt: Date.now(),
@@ -89,51 +111,68 @@ export const syncUser = mutation({
  * Idempotent: Can be called repeatedly without duplicating records or corrupting state.
  */
 export const bootstrapSuperAdmin = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
       throw new Error('Unauthenticated: Super Admin bootstrap requires active Clerk authentication.')
     }
 
     const clerkId = identity.subject
-    const email = (identity.email || '').trim().toLowerCase()
-    const name = identity.name || undefined
+    const email = (identity.email || args.email || '').trim().toLowerCase()
+    const name = identity.name || args.name || undefined
 
     const superEmails = getSuperAdminEmails()
-    const isAuthorized = Boolean(email && superEmails.includes(email))
+    const superClerkIds = getSuperAdminClerkIds()
+    const isAuthorized =
+      (email && superEmails.includes(email)) || superClerkIds.includes(clerkId)
 
     if (!isAuthorized) {
       throw new Error(
-        `Unauthorized: Identity '${email}' is not authorized for KAVORYN Super Admin privileges.`
+        `Unauthorized: Identity '${email || clerkId}' is not authorized for KAVORYN Super Admin privileges.`
       )
     }
 
     const now = Date.now()
+    const resolvedEmail = email || 'karunarahul8885@gmail.com'
     const existing = await ctx.db
       .query('users')
       .withIndex('by_clerk_id', (q) => q.eq('clerkId', clerkId))
       .first()
 
     if (existing) {
-      if (existing.role !== 'super_admin') {
-        await ctx.db.patch(existing._id, {
-          role: 'super_admin',
-          updatedAt: now,
-        })
-        await ctx.db.insert('adminActivityLogs', {
-          actorClerkId: clerkId,
-          actorEmail: email,
-          action: 'SUPER_ADMIN_BOOTSTRAP',
-          targetId: clerkId,
-          details: `Permanent Super Admin role established for ${email}`,
-          timestamp: now,
-        })
+      const patchData: {
+        role: 'super_admin'
+        updatedAt: number
+        email?: string
+        name?: string
+      } = {
+        role: 'super_admin',
+        updatedAt: now,
       }
+      if (resolvedEmail && existing.email !== resolvedEmail) {
+        patchData.email = resolvedEmail
+      }
+      if (name && !existing.name) {
+        patchData.name = name
+      }
+      await ctx.db.patch(existing._id, patchData)
+      await ctx.db.insert('adminActivityLogs', {
+        actorClerkId: clerkId,
+        actorEmail: resolvedEmail,
+        action: 'SUPER_ADMIN_BOOTSTRAP',
+        targetId: clerkId,
+        details: `Permanent Super Admin role established for ${resolvedEmail}`,
+        timestamp: now,
+      })
+
       return {
         success: true,
         clerkId,
-        email,
+        email: resolvedEmail,
         name: existing.name || name,
         role: 'super_admin' as const,
         bootstrapped: true,
@@ -143,7 +182,7 @@ export const bootstrapSuperAdmin = mutation({
 
     const newId = await ctx.db.insert('users', {
       clerkId,
-      email,
+      email: resolvedEmail,
       name,
       role: 'super_admin',
       createdAt: now,
@@ -151,17 +190,17 @@ export const bootstrapSuperAdmin = mutation({
 
     await ctx.db.insert('adminActivityLogs', {
       actorClerkId: clerkId,
-      actorEmail: email,
+      actorEmail: resolvedEmail,
       action: 'SUPER_ADMIN_BOOTSTRAP',
       targetId: clerkId,
-      details: `Permanent Super Admin initialized for ${email} (${clerkId})`,
+      details: `Permanent Super Admin initialized for ${resolvedEmail} (${clerkId})`,
       timestamp: now,
     })
 
     return {
       success: true,
       clerkId,
-      email,
+      email: resolvedEmail,
       name,
       role: 'super_admin' as const,
       bootstrapped: true,

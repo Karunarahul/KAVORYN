@@ -1173,10 +1173,13 @@ export const storeBackend = {
     return null
   },
 
-  async syncUser(): Promise<DBUser | null> {
+  async syncUser(userInfo?: { email?: string; name?: string }): Promise<DBUser | null> {
     if (isConvexConfigured && convexClient) {
       try {
-        const synced = await convexClient.mutation(api.users.syncUser, {})
+        const synced = await convexClient.mutation(api.users.syncUser, {
+          email: userInfo?.email,
+          name: userInfo?.name,
+        })
         return synced as DBUser
       } catch (err) {
         console.warn('Convex syncUser error:', err)
@@ -1267,23 +1270,26 @@ export const storeBackend = {
   },
 
   // --- Super Admin Bootstrap & Customer Directory ---
-  async bootstrapSuperAdmin(): Promise<{
+  async bootstrapSuperAdmin(userInfo?: { email?: string; name?: string }): Promise<{
     success: boolean
     clerkId: string
     email: string
     name?: string
     role: UserRole
-    bootstrapped: boolean
+    bootstrapped?: boolean
     alreadyConfigured: boolean
   }> {
     if (isConvexConfigured && convexClient) {
-      return (await convexClient.mutation(api.users.bootstrapSuperAdmin, {})) as {
+      return (await convexClient.mutation(api.users.bootstrapSuperAdmin, {
+        email: userInfo?.email,
+        name: userInfo?.name,
+      })) as {
         success: boolean
         clerkId: string
         email: string
         name?: string
         role: UserRole
-        bootstrapped: boolean
+        bootstrapped?: boolean
         alreadyConfigured: boolean
       }
     }

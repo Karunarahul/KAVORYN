@@ -83,7 +83,10 @@ function RoleBasedAuthNavigator() {
         handledRef.current = userKey
 
         storeBackend
-          .syncUser()
+          .syncUser({
+            email: user.primaryEmailAddress?.emailAddress,
+            name: user.fullName || undefined,
+          })
           .then(() => storeBackend.getCurrentUser())
           .then((currentUser) => {
             if (!currentUser) return

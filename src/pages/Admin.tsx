@@ -76,7 +76,10 @@ export const AdminPage: React.FC = () => {
     setIsRefreshing(true)
     try {
       if (user) {
-        await storeBackend.syncUser()
+        await storeBackend.syncUser({
+          email: user?.primaryEmailAddress?.emailAddress,
+          name: user?.fullName || undefined,
+        })
       }
       const currentUser = await storeBackend.getCurrentUser()
       setDbUser(currentUser)

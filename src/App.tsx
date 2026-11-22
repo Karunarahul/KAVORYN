@@ -82,12 +82,11 @@ function RoleBasedAuthNavigator() {
       if (handledRef.current !== userKey) {
         handledRef.current = userKey
 
+        const email = user.primaryEmailAddress?.emailAddress
+        const name = user.fullName || undefined
         storeBackend
-          .syncUser({
-            email: user.primaryEmailAddress?.emailAddress,
-            name: user.fullName || undefined,
-          })
-          .then(() => storeBackend.getCurrentUser())
+          .syncUser({ email, name })
+          .then(() => storeBackend.getCurrentUser(email))
           .then((currentUser) => {
             if (!currentUser) return
             const path = location.pathname

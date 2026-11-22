@@ -78,16 +78,15 @@ export const ProfilePage: React.FC = () => {
 
   const loadProfileData = async () => {
     try {
+      const email = clerkUser?.primaryEmailAddress?.emailAddress
+      const name = clerkUser?.fullName || undefined
       // 1. Sync Clerk user into Convex database
       if (clerkUser) {
-        await storeBackend.syncUser({
-          email: clerkUser?.primaryEmailAddress?.emailAddress,
-          name: clerkUser?.fullName || undefined,
-        })
+        await storeBackend.syncUser({ email, name })
       }
 
       const [currentUser, userOrders, userAddresses, existingReq] = await Promise.all([
-        storeBackend.getCurrentUser(),
+        storeBackend.getCurrentUser(email),
         storeBackend.listMyOrders(),
         storeBackend.listMyAddresses(),
         storeBackend.getMyAdminRequest(),

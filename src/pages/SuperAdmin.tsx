@@ -109,21 +109,17 @@ export const SuperAdminPage: React.FC = () => {
 
   const loadAllData = async () => {
     try {
+      const email = user?.primaryEmailAddress?.emailAddress
+      const name = user?.fullName || undefined
       if (user) {
         try {
-          await storeBackend.bootstrapSuperAdmin({
-            email: user?.primaryEmailAddress?.emailAddress,
-            name: user?.fullName || undefined,
-          })
+          await storeBackend.bootstrapSuperAdmin({ email, name })
         } catch {
           // Fall back to standard sync if not in bootstrap allowlist
         }
-        await storeBackend.syncUser({
-          email: user?.primaryEmailAddress?.emailAddress,
-          name: user?.fullName || undefined,
-        })
+        await storeBackend.syncUser({ email, name })
       }
-      const currentUser = await storeBackend.getCurrentUser()
+      const currentUser = await storeBackend.getCurrentUser(email)
       setDbUser(currentUser)
 
       // Only fetch full administrative data if authorized as super_admin

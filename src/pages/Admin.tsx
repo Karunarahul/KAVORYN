@@ -74,13 +74,12 @@ export const AdminPage: React.FC = () => {
 
   const loadData = async () => {
     try {
+      const email = user?.primaryEmailAddress?.emailAddress
+      const name = user?.fullName || undefined
       if (user) {
-        await storeBackend.syncUser({
-          email: user?.primaryEmailAddress?.emailAddress,
-          name: user?.fullName || undefined,
-        })
+        await storeBackend.syncUser({ email, name })
       }
-      const currentUser = await storeBackend.getCurrentUser()
+      const currentUser = await storeBackend.getCurrentUser(email)
       setDbUser(currentUser)
 
       if (currentUser?.role === 'customer') {

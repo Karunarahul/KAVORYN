@@ -12,11 +12,47 @@ import {
  * Public Query: Get current authenticated user profile and assigned role.
  */
 export const getCurrentUser = query({
-  args: {},
-  handler: async (ctx) => {
-    const record = await getCurrentUserRecord(ctx)
+  args: {
+    email: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const record = await getCurrentUserRecord(ctx, args.email)
     if (!record) return null
     return record.user
+  },
+})
+
+/**
+ * Super Admin Management Mutation: Ensure a specific Clerk user ID has permanent Super Admin privileges.
+ */
+export const upgradeUserToSuperAdmin = mutation({
+  args: {
+    clerkId: v.string(),
+    email: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('users')
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', args.clerkId))
+      .first()
+
+    const now = Date.now()
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        role: 'super_admin',
+        email: args.email,
+        updatedAt: now,
+      })
+      return { success: true, action: 'updated', userId: existing._id }
+    }
+
+    const newId = await ctx.db.insert('users', {
+      clerkId: args.clerkId,
+      email: args.email,
+      role: 'super_admin',
+      createdAt: now,
+    })
+    return { success: true, action: 'created', userId: newId }
   },
 })
 

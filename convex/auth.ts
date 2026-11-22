@@ -31,9 +31,19 @@ export function getSuperAdminClerkIds(): string[] {
     .split(',')
     .map((e) => e.trim())
     .filter(Boolean)
-  // Permanent authorized Clerk User ID for karunarahul8885@gmail.com
-  if (!parsed.includes('user_3MRF4pYoolWnkVAEHIjgvXc6VYs')) {
-    parsed.push('user_3MRF4pYoolWnkVAEHIjgvXc6VYs')
+  // Permanent authorized Clerk User IDs for karunarahul8885@gmail.com
+  const defaultSuperClerkIds = [
+    'user_3MRF4pYoolWnkVAEHIjgvXc6VYs',
+    'user_3MRErWTes8lsuVPMzZI78Yofl7z',
+    'user_3MRDmNQmBRTWYID0zQZ7BwdjSRy',
+    'user_3MRCwmnLoXKuvpLsJCMiQKUCEbr',
+    'user_3MRAakfTr6vygD9V1Atz7TDKttK',
+    'user_3MR46QeYEXb91HeTufB2TFXc8kO',
+  ]
+  for (const id of defaultSuperClerkIds) {
+    if (!parsed.includes(id)) {
+      parsed.push(id)
+    }
   }
   return parsed
 }
@@ -43,7 +53,8 @@ export function getSuperAdminClerkIds(): string[] {
  * If user does not exist yet, returns a virtual record with the appropriate default role.
  */
 export async function getCurrentUserRecord(
-  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>
+  ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
+  clientEmail?: string
 ): Promise<{
   identity: { subject: string; email?: string; name?: string }
   user: {
@@ -57,7 +68,7 @@ export async function getCurrentUserRecord(
   if (!identity) return null
 
   const clerkId = identity.subject
-  const email = (identity.email || '').trim().toLowerCase()
+  const email = (identity.email || clientEmail || '').trim().toLowerCase()
   const name = identity.name || undefined
 
   const superEmails = getSuperAdminEmails()

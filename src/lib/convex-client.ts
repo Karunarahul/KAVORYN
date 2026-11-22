@@ -1161,10 +1161,10 @@ export const storeBackend = {
   },
 
   // --- Customer & Super Admin RBAC Operations ---
-  async getCurrentUser(): Promise<DBUser | null> {
+  async getCurrentUser(email?: string): Promise<DBUser | null> {
     if (isConvexConfigured && convexClient) {
       try {
-        const user = await convexClient.query(api.users.getCurrentUser, {})
+        const user = await convexClient.query(api.users.getCurrentUser, { email })
         return user as DBUser | null
       } catch (err) {
         console.warn('Convex getCurrentUser error:', err)

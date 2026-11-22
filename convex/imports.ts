@@ -38,7 +38,7 @@ export const createJob = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requireAdminAuth(ctx)
+    const identity = await requireAdminAuth(ctx)
     const now = Date.now()
 
     // Ensure unique jobId
@@ -226,7 +226,7 @@ export const completeJob = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requireAdminAuth(ctx)
+    const identity = await requireAdminAuth(ctx)
     const job = await ctx.db
       .query('catalogueImportJobs')
       .withIndex('by_job_id', (q) => q.eq('jobId', args.jobId))
@@ -261,7 +261,7 @@ export const completeJob = mutation({
 export const cancelJob = mutation({
   args: { jobId: v.string() },
   handler: async (ctx, args) => {
-    await requireAdminAuth(ctx)
+    const identity = await requireAdminAuth(ctx)
     const job = await ctx.db
       .query('catalogueImportJobs')
       .withIndex('by_job_id', (q) => q.eq('jobId', args.jobId))

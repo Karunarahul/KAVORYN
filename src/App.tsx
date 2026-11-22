@@ -5,6 +5,7 @@ import { Header } from './components/Header'
 import { Drawer } from './components/Drawer'
 import { Footer } from './components/Footer'
 import { Toast } from './components/Toast'
+import { ProductErrorBoundary } from './components/ErrorBoundary'
 import { storeBackend } from './lib/convex-client'
 import { Home } from './pages/Home'
 import type { CartLine } from './types'
@@ -208,7 +209,14 @@ export function App() {
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/collections/:slug" element={<Shop />} />
-            <Route path="/product/:slug" element={<ProductPage add={addToCart} />} />
+            <Route
+              path="/product/:slug"
+              element={
+                <ProductErrorBoundary>
+                  <ProductPage add={addToCart} />
+                </ProductErrorBoundary>
+              }
+            />
             <Route path="/cart" element={<Cart lines={lines} setLines={setLines} />} />
             <Route path="/checkout" element={<Checkout lines={lines} />} />
             <Route path="/order-success" element={<OrderSuccess />} />

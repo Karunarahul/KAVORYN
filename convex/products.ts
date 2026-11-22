@@ -279,6 +279,7 @@ export const getBySlug = query({
         printMasterUrl: null,
         galleryUrls,
         lifestyleUrls,
+        isUnavailable: false,
       }
     }
 
@@ -302,11 +303,33 @@ export const getBySlug = query({
           printMasterUrl,
           galleryUrls,
           lifestyleUrls,
+          isUnavailable: false,
         }
       }
     }
 
-    return null
+    // Product exists in database, but is not currently published for public visitors
+    return {
+      _id: product._id,
+      _creationTime: product._creationTime,
+      slug: product.slug,
+      name: product.name,
+      sku: product.sku,
+      collection: product.collection,
+      description: product.description,
+      colors: product.colors,
+      motif: product.motif,
+      renderMode: effectiveRenderMode,
+      active: product.active,
+      status: product.status || 'draft',
+      prices: product.prices,
+      finishSurcharges: product.finishSurcharges,
+      thumbnailUrl: null,
+      printMasterUrl: null,
+      galleryUrls: [],
+      lifestyleUrls: [],
+      isUnavailable: true,
+    }
   },
 })
 

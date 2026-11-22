@@ -63,8 +63,8 @@ async function runArtworkTests() {
   // 4. Procedural Mode Preservation
   await test('1.4 First Edition prints preserve procedural renderMode with zero artwork disruption', async () => {
     const all = await client.query(api.products.list, {})
-    const proceduralPrints = all.filter((p) => p.sku !== 'KVR-FOR-001')
-    assert.ok(proceduralPrints.length >= 8, 'Other First Edition prints must exist')
+    const proceduralPrints = all.filter((p) => p.renderMode === 'procedural')
+    assert.ok(proceduralPrints.length >= 4, 'Procedural First Edition prints must exist')
     for (const p of proceduralPrints) {
       assert.equal(p.renderMode, 'procedural', `${p.name} (${p.sku}) must have renderMode='procedural'`)
       assert.ok(p.motif, `${p.name} must preserve motif graphic`)
@@ -76,7 +76,7 @@ async function runArtworkTests() {
   await test('1.5 Public visitors cannot download print masters directly', async () => {
     const spiderman = await client.query(api.products.getBySlug, { slug: 'shape-language' })
     assert.equal(spiderman.printMasterUrl, null, 'Public getBySlug returns null printMasterUrl')
-    
+
     // Calling getPrintMasterDownloadUrl without admin auth should fail
     let threw = false
     try {

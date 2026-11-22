@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import {
@@ -18,7 +18,6 @@ import {
   finishDetails,
   finishPrices,
   formatMoney,
-  getProductPrice,
   prices,
   products as staticProducts,
   shippingConfig,
@@ -41,22 +40,32 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
   const liveDbProduct = useQuery(api.products.getBySlug, { slug: slug || '' })
   const staticProduct = staticProducts.find((x) => x.slug === slug)
 
-  const p: Product | undefined = liveDbProduct
-    ? {
-        id: liveDbProduct._id,
-        slug: liveDbProduct.slug,
-        sku: liveDbProduct.sku,
-        name: liveDbProduct.name,
-        collection: liveDbProduct.collection as Collection,
-        description: liveDbProduct.description,
-        colors: liveDbProduct.colors as [string, string, string],
-        motif: liveDbProduct.motif as Product['motif'],
-        renderMode: (liveDbProduct.renderMode as 'image' | 'procedural') || (liveDbProduct.thumbnailUrl ? 'image' : 'procedural'),
-        thumbnailUrl: liveDbProduct.thumbnailUrl,
-        galleryUrls: liveDbProduct.galleryUrls,
-        lifestyleUrls: liveDbProduct.lifestyleUrls,
-      }
-    : staticProduct
+  // Explicit state distinctions: loading vs unavailable vs missing vs found
+  const isUnavailable = liveDbProduct && 'isUnavailable' in liveDbProduct && Boolean(liveDbProduct.isUnavailable)
+  const isMissing = liveDbProduct === null && !staticProduct
+  const isLoading = liveDbProduct === undefined && !staticProduct
+
+  const p: Product | undefined =
+    liveDbProduct && !isUnavailable
+      ? {
+          id: liveDbProduct._id,
+          slug: liveDbProduct.slug,
+          sku: liveDbProduct.sku,
+          name: liveDbProduct.name,
+          collection: liveDbProduct.collection as Collection,
+          description:
+            liveDbProduct.description ||
+            'Museum-quality archival giclée print produced with mineral pigment inks on 230 GSM matte fine art paper.',
+          colors: (liveDbProduct.colors || ['#171717', '#F5F1E8', '#3155E7']) as [string, string, string],
+          motif: (liveDbProduct.motif as Product['motif']) || 'circle',
+          renderMode:
+            (liveDbProduct.renderMode as 'image' | 'procedural') ||
+            (liveDbProduct.thumbnailUrl ? 'image' : 'procedural'),
+          thumbnailUrl: liveDbProduct.thumbnailUrl,
+          galleryUrls: liveDbProduct.galleryUrls,
+          lifestyleUrls: liveDbProduct.lifestyleUrls,
+        }
+      : staticProduct
 
   const [fitMode, setFitMode] = useState<'cover' | 'contain'>('cover')
   const [activeMediaUrl, setActiveMediaUrl] = useState<string | null>(null)
@@ -69,14 +78,68 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
     'paper'
   )
 
-  if (liveDbProduct === null && !staticProduct) {
+  // 1. Loading State: Show full loading skeleton while Convex query resolves
+  if (isLoading) {
+    return (
+      <div className="product-page-container">
+        <nav className="product-breadcrumbs" aria-label="Loading breadcrumbs">
+          <div className="skeleton-line" style={{ width: '180px', height: '14px' }} />
+        </nav>
+
+        <section className="product-page">
+          <div className="product-stage">
+            <div className="product-stage-inner">
+              <div className="pdp-skeleton-frame" aria-hidden="true">
+                <div className="pdp-skeleton-shimmer" />
+              </div>
+            </div>
+          </div>
+
+          <div className="product-info">
+            <div className="product-header-block">
+              <div className="skeleton-line" style={{ width: '80px', height: '14px', marginBottom: '0.75rem' }} />
+              <div className="skeleton-line" style={{ width: '70%', height: '36px', marginBottom: '1rem' }} />
+              <div className="skeleton-line" style={{ width: '140px', height: '28px', marginBottom: '1rem' }} />
+              <div className="skeleton-line" style={{ width: '90%', height: '16px', marginBottom: '0.5rem' }} />
+              <div className="skeleton-line" style={{ width: '60%', height: '16px', marginBottom: '1.5rem' }} />
+            </div>
+
+            <div className="choice-section">
+              <div className="skeleton-line" style={{ width: '110px', height: '16px', marginBottom: '0.75rem' }} />
+              <div className="pdp-skeleton-grid-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="pdp-skeleton-card" />
+                ))}
+              </div>
+            </div>
+
+            <div className="choice-section" style={{ marginTop: '1.5rem' }}>
+              <div className="skeleton-line" style={{ width: '110px', height: '16px', marginBottom: '0.75rem' }} />
+              <div className="pdp-skeleton-grid-2">
+                {[1, 2].map((i) => (
+                  <div key={i} className="pdp-skeleton-card" style={{ height: '70px' }} />
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '2rem' }}>
+              <div className="skeleton-line" style={{ width: '100%', height: '48px' }} />
+            </div>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  // 2. Unpublished / Archived State: Show informative curation status notice
+  if (isUnavailable) {
     return (
       <section className="section" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="customer-restricted-card" role="alert">
           <span className="restricted-eyebrow">CATALOGUE NOTICE</span>
           <h3>PRINT CURRENTLY UNAVAILABLE</h3>
           <p>
-            The requested artwork is either currently under studio curation or has been archived from the active public edition.
+            The artwork &ldquo;{liveDbProduct?.name || 'Requested Print'}&rdquo; is currently under studio curation or has been archived from the active public edition.
           </p>
           <div className="restricted-footer-actions">
             <Link to="/shop" className="button blue">
@@ -89,8 +152,32 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
     )
   }
 
-  if (!p) {
-    return <Navigate to="/shop" replace />
+  // 3. Genuinely Missing Product: Show proper 404 page (never redirect to /shop)
+  if (isMissing || !p) {
+    return (
+      <section className="not-found-page section" style={{ minHeight: '60vh' }}>
+        <div className="not-found-content">
+          <p className="eyebrow">ERROR 404 · PRINT NOT FOUND</p>
+          <h1 className="not-found-title">
+            THE COMPOSITION
+            <br />
+            DOESN’T EXIST.
+          </h1>
+          <p className="not-found-desc">
+            No archival print was found matching &ldquo;{slug}&rdquo;. It may have been renamed, removed, or relocated to another collection.
+          </p>
+          <div className="not-found-actions">
+            <Link to="/shop" className="button blue">
+              <span>RETURN TO THE FIRST EDITION</span>
+              <ArrowRight size={16} />
+            </Link>
+            <Link to="/" className="button outline">
+              <span>HOME</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   // Dynamic pricing based on authoritative Convex prices or static fallback
@@ -283,7 +370,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
               {(Object.keys(prices) as PosterSize[]).map((s) => {
                 const dim = sizeDimensions[s]
                 const isSelected = size === s
-                const sPrice = getProductPrice(s, finish)
+                const sPrice = (pricesMap[s] || prices[s]) + (finishSurchargesMap[finish] ?? finishPrices[finish] ?? 0)
                 return (
                   <button
                     key={s}
@@ -320,6 +407,7 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
               {(['Matte', 'Gloss'] as const).map((f) => {
                 const info = finishDetails[f]
                 const isSelected = finish === f
+                const finishSurcharge = finishSurchargesMap[f] ?? info.surcharge
                 return (
                   <button
                     key={f}
@@ -332,8 +420,8 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
                     <div className="finish-head">
                       <strong>{info.label}</strong>
                       <span className="finish-badge">
-                        {info.surcharge > 0
-                          ? `+${formatMoney(info.surcharge)}`
+                        {finishSurcharge > 0
+                          ? `+${formatMoney(finishSurcharge)}`
                           : 'INCLUDED'}
                       </span>
                     </div>

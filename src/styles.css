@@ -7372,3 +7372,107 @@ h2 {
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   PRODUCT PAGE LOADING SKELETON
+   ========================================================================== */
+.pdp-skeleton-frame {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: var(--paper-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pdp-skeleton-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  animation: pdp-shimmer 1.8s infinite;
+}
+
+@keyframes pdp-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-line {
+  display: block;
+  background: var(--paper-soft);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  animation: pdp-shimmer 1.8s infinite;
+}
+
+.pdp-skeleton-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.pdp-skeleton-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.pdp-skeleton-card {
+  height: 80px;
+  background: var(--paper-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pdp-skeleton-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  animation: pdp-shimmer 1.8s infinite;
+}
+
+@media (max-width: 640px) {
+  .pdp-skeleton-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/react'
 import { Header } from './components/Header'
@@ -6,10 +6,10 @@ import { Drawer } from './components/Drawer'
 import { Footer } from './components/Footer'
 import { Toast } from './components/Toast'
 import { storeBackend } from './lib/convex-client'
+import { Home } from './pages/Home'
 import type { CartLine } from './types'
 
-// Route-based code splitting via React.lazy for optimal Lighthouse performance & bundle minimization
-const Home = lazy(() => import('./pages/Home').then((m) => ({ default: m.Home })))
+// Secondary routes lazy-loaded for optimal initial bundle & chunk splitting
 const Shop = lazy(() => import('./pages/Shop').then((m) => ({ default: m.Shop })))
 const ProductPage = lazy(() =>
   import('./pages/ProductPage').then((m) => ({ default: m.ProductPage }))
@@ -127,6 +127,14 @@ export function App() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [recentlyAdded, setRecentlyAdded] = useState<CartLine | null>(null)
 
+  const handleOpenDrawer = useCallback(() => {
+    setDrawerOpen(true)
+  }, [])
+
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false)
+  }, [])
+
   useEffect(() => {
     try {
       localStorage.setItem('kavoryn-cart', JSON.stringify(lines))
@@ -170,9 +178,16 @@ export function App() {
       <ScrollToTop />
       <RoleBasedAuthNavigator />
 
-      <Header count={totalCount} onMenu={() => setDrawerOpen(true)} />
+      <Header
+        count={totalCount}
+        isMenuOpen={drawerOpen}
+        onMenu={handleOpenDrawer}
+      />
 
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <Drawer
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+      />
 
       <Toast
         item={recentlyAdded}

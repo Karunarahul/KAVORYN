@@ -14,7 +14,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ p }) => {
       <Link
         className="product-card"
         to={`/product/${p.slug}`}
-        aria-label={`View ${p.name} poster details`}
+        aria-label={`${p.name} — Contemporary Art Print, from ${formatMoney(prices.A4)}`}
       >
         <div className="card-media-wrapper">
           <Poster p={p} />

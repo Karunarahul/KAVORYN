@@ -1,0 +1,40 @@
+# KAVORYN Fine Art Prints & Posters
+
+> Contemporary art-print studio based in India. Archival 230 GSM museum-grade posters designed to start conversations, not match the sofa.
+
+## About KAVORYN
+KAVORYN is an independent contemporary art studio specializing in graphic, typographic, and architectural fine art prints. Every piece is printed on museum-grade 230 GSM acid-free archival matte or 260 GSM gallery lustre paper using fade-resistant pigment inks. Orders are dispatched across India in reinforced triangular tubes to prevent edge creases.
+
+## Storefront & Collections
+- [Storefront / Homepage](https://kavoryn-two.vercel.app/): Discover the First Edition collection of 12 original prints.
+- [All Prints Catalog](https://kavoryn-two.vercel.app/shop): Complete catalog of contemporary fine art prints.
+- [FORM Collection](https://kavoryn-two.vercel.app/collections/form): Exercises in balance, bold geometry, and electric negative space.
+- [FRAME Collection](https://kavoryn-two.vercel.app/collections/frame): Cinematic visual moments captured between stillness and light.
+- [TYPE Collection](https://kavoryn-two.vercel.app/collections/type): Typographic manifestos typeset for rooms with an opinion.
+- [ELSEWHERE Collection](https://kavoryn-two.vercel.app/collections/elsewhere): Atmospheric gradients and palettes drawn from distant coastlines.
+- [ORGANIC Collection](https://kavoryn-two.vercel.app/collections/organic): Earthy structures where brutalist lines meet biophilic growth.
+- [Custom Prints Studio](https://kavoryn-two.vercel.app/customize): Bespoke custom typographic poster commissioning.
+- [About the Studio](https://kavoryn-two.vercel.app/about): Studio manifesto, archival materials, and production standards.
+- [Track Your Order](https://kavoryn-two.vercel.app/track-order): Real-time shipment and delivery status tracking.
+- [Contact & Support](https://kavoryn-two.vercel.app/contact): Studio inquiries, WhatsApp assistance, and customer support.
+
+## Product Formats & Pricing
+- A4 (21.0 × 29.7 cm / 8.3 × 11.7 in): ₹149 (Matte) / ₹199 (Lustre)
+- A3 (29.7 × 42.0 cm / 11.7 × 16.5 in): ₹249 (Matte) / ₹299 (Lustre)
+- A2 (42.0 × 59.4 cm / 16.5 × 23.4 in): ₹399 (Matte) / ₹449 (Lustre)
+- A1 (59.4 × 84.1 cm / 23.4 × 33.1 in): ₹699 (Matte) / ₹749 (Lustre)
+- Free Pan-India shipping on orders above ₹499. Standard shipping: ₹79.
+
+## First Edition Catalog (12 Prints)
+1. **Shape Language** (SKU: KVR-FOR-001) - Collection: FORM
+2. **The Blue Dimension** (SKU: KVR-FOR-002) - Collection: FORM
+3. **Organic Disorder** (SKU: KVR-FOR-003) - Collection: FORM
+4. **After Hours** (SKU: KVR-CIN-001) - Collection: FRAME
+5. **The Last Light** (SKU: KVR-CIN-004) - Collection: FRAME
+6. **Make It Matter** (SKU: KVR-TYP-001) - Collection: TYPE
+7. **Less Ordinary** (SKU: KVR-TYP-002) - Collection: TYPE
+8. **Create Anyway** (SKU: KVR-TYP-004) - Collection: TYPE
+9. **Coastal State** (SKU: KVR-ELS-002) - Collection: ELSEWHERE
+10. **Wild Geometry** (SKU: KVR-ORG-001) - Collection: ORGANIC
+11. **Quiet Earth** (SKU: KVR-ORG-003) - Collection: ORGANIC
+12. **Your Name** (SKU: KVR-PER-001) - Collection: PERSONAL (Custom)

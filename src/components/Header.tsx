@@ -7,21 +7,24 @@ import { isClerkConfigured } from '../lib/env'
 
 interface HeaderProps {
   count: number
+  isMenuOpen: boolean
   onMenu: () => void
 }
 
-export const Header: React.FC<HeaderProps> = ({ count, onMenu }) => {
+export const Header: React.FC<HeaderProps> = ({ count, isMenuOpen, onMenu }) => {
   return (
     <header className="site-header" role="banner">
       <div className="header-left">
         <button
-          aria-label="Open mobile navigation menu"
-          aria-expanded={false}
+          id="menu-trigger-btn"
+          type="button"
+          aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isMenuOpen}
           aria-controls="mobile-navigation-drawer"
           className="icon-button mobile-only menu-trigger"
           onClick={onMenu}
         >
-          <Menu size={22} />
+          <Menu size={22} aria-hidden="true" />
         </button>
         <Link className="brand" to="/" aria-label="KAVORYN Studio Homepage">
           KAVORYN<span>.</span>

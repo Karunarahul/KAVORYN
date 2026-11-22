@@ -88,7 +88,7 @@ export const Home: React.FC = () => {
       <section className="collections-strip-section">
         <div className="strip-header">
           <span className="eyebrow">EXPLORE BY CURATED THEME</span>
-          <h3>SIX COLLECTIONS. ZERO COMPROMISE.</h3>
+          <h2 className="strip-title">SIX COLLECTIONS. ZERO COMPROMISE.</h2>
         </div>
         <div className="collections-pills-grid">
           {Object.entries(collections).map(([slug, name]) => (

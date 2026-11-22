@@ -12,19 +12,31 @@ export const Drawer: React.FC<DrawerProps> = ({ open, onClose }) => {
   const location = useLocation()
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const prevPathRef = useRef(location.pathname)
+  const prevOpenRef = useRef(open)
 
-  // Close drawer automatically on route changes
+  // Close drawer automatically when route actually changes
   useEffect(() => {
-    onClose()
-  }, [location.pathname, onClose])
+    if (prevPathRef.current !== location.pathname) {
+      prevPathRef.current = location.pathname
+      if (open) {
+        onClose()
+      }
+    }
+  }, [location.pathname, open, onClose])
 
-  // Focus management: focus close button when drawer opens
+  // Focus management: focus close button when drawer opens, restore focus to trigger when closed
   useEffect(() => {
-    if (open) {
-      setTimeout(() => {
+    if (open && !prevOpenRef.current) {
+      const timer = setTimeout(() => {
         closeButtonRef.current?.focus()
       }, 50)
+      return () => clearTimeout(timer)
+    } else if (!open && prevOpenRef.current) {
+      const trigger = document.getElementById('menu-trigger-btn')
+      trigger?.focus()
     }
+    prevOpenRef.current = open
   }, [open])
 
   // Handle ESC key, body scroll lock, and trap focus
@@ -33,6 +45,7 @@ export const Drawer: React.FC<DrawerProps> = ({ open, onClose }) => {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault()
         onClose()
         return
       }
@@ -84,16 +97,17 @@ export const Drawer: React.FC<DrawerProps> = ({ open, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="drawer-header">
-          <Link to="/" className="drawer-brand" onClick={onClose}>
+          <Link to="/" className="drawer-brand" onClick={onClose} aria-label="KAVORYN Homepage">
             KAVORYN<span>.</span>
           </Link>
           <button
             ref={closeButtonRef}
+            type="button"
             aria-label="Close navigation menu"
             className="drawer-close-btn"
             onClick={onClose}
           >
-            <X size={24} />
+            <X size={24} aria-hidden="true" />
           </button>
         </div>
 
@@ -101,7 +115,7 @@ export const Drawer: React.FC<DrawerProps> = ({ open, onClose }) => {
           <div className="drawer-section">
             <span className="drawer-eyebrow">COLLECTIONS</span>
             <nav className="drawer-nav" aria-label="Collections mobile navigation">
-              <Link to="/shop" className="drawer-link all-prints-link">
+              <Link to="/shop" className="drawer-link all-prints-link" onClick={onClose}>
                 <span>ALL PRINTS</span>
                 <span className="drawer-link-badge">12</span>
               </Link>
@@ -110,6 +124,7 @@ export const Drawer: React.FC<DrawerProps> = ({ open, onClose }) => {
                   key={slug}
                   to={`/collections/${slug}`}
                   className="drawer-link"
+                  onClick={onClose}
                 >
                   <span>{name}</span>
                   <ArrowRight size={18} className="drawer-arrow" aria-hidden="true" />
@@ -121,11 +136,12 @@ export const Drawer: React.FC<DrawerProps> = ({ open, onClose }) => {
           <div className="drawer-section studio-section">
             <span className="drawer-eyebrow">STUDIO & INFO</span>
             <div className="drawer-sublinks">
-              <Link to="/profile">MY ACCOUNT & ORDERS</Link>
-              <Link to="/customize">MAKE IT PERSONAL (CUSTOM)</Link>
-              <Link to="/about">THE STUDIO (ABOUT)</Link>
-              <Link to="/track-order">TRACK YOUR ORDER</Link>
-              <Link to="/contact">CONTACT & WHATSAPP</Link>
+              <Link to="/cart" onClick={onClose}>SHOPPING CART</Link>
+              <Link to="/profile" onClick={onClose}>MY ACCOUNT & ORDERS</Link>
+              <Link to="/customize" onClick={onClose}>MAKE IT PERSONAL (CUSTOM)</Link>
+              <Link to="/about" onClick={onClose}>THE STUDIO (ABOUT)</Link>
+              <Link to="/track-order" onClick={onClose}>TRACK YOUR ORDER</Link>
+              <Link to="/contact" onClick={onClose}>CONTACT & WHATSAPP</Link>
             </div>
           </div>
         </div>

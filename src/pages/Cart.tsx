@@ -177,7 +177,7 @@ export const Cart: React.FC<CartProps> = ({ lines, setLines }) => {
                             type="button"
                             className="qty-btn"
                             onClick={() => updateQuantity(i, -1)}
-                            aria-label="Decrease quantity"
+                            aria-label={`Decrease quantity of ${l.product.name}`}
                           >
                             <Minus size={14} />
                           </button>
@@ -186,7 +186,7 @@ export const Cart: React.FC<CartProps> = ({ lines, setLines }) => {
                             type="button"
                             className="qty-btn"
                             onClick={() => updateQuantity(i, 1)}
-                            aria-label="Increase quantity"
+                            aria-label={`Increase quantity of ${l.product.name}`}
                           >
                             <Plus size={14} />
                           </button>

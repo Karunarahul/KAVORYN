@@ -31,9 +31,10 @@ export const Poster: React.FC<PosterProps> = ({
         color: fg,
         ['--poster-accent' as string]: accent,
       }}
+      role="img"
       aria-label={`Art print: ${displayName}`}
     >
-      <div className="poster-inner">
+      <div className="poster-inner" aria-hidden="true">
         <div className="poster-header">
           <span className="poster-code">{p.sku}</span>
           <span className="poster-badge">230 GSM ARCHIVAL</span>

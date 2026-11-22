@@ -14,6 +14,7 @@ import {
 import {
   collections,
   finishDetails,
+  finishPrices,
   formatMoney,
   getProductPrice,
   prices,
@@ -68,8 +69,38 @@ export const ProductPage: React.FC<ProductPageProps> = ({ add }) => {
     .sort((a) => (a.collection === p.collection ? -1 : 1))
     .slice(0, 3)
 
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: p.name,
+    description: p.description,
+    sku: p.sku,
+    category: `Art Prints > ${collections[p.collection]}`,
+    brand: {
+      '@type': 'Brand',
+      name: 'KAVORYN Studio',
+    },
+    offers: {
+      '@type': 'AggregateOffer',
+      priceCurrency: 'INR',
+      lowPrice: prices.A4,
+      highPrice: prices.A1 + finishPrices.Gloss,
+      offerCount: 8,
+      priceValidUntil: '2027-12-31',
+      availability: 'https://schema.org/InStock',
+      seller: {
+        '@type': 'Organization',
+        name: 'KAVORYN Studio',
+      },
+    },
+  }
+
   return (
     <div className="product-page-container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       {/* Breadcrumb Navigation */}
       <nav className="product-breadcrumbs" aria-label="Breadcrumb navigation">
         <Link to="/">HOME</Link>

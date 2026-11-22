@@ -1,0 +1,209 @@
+{
+  "version": "1.0.0",
+  "name": "KAVORYN Studio Catalog",
+  "description": "Machine-readable catalog of contemporary fine art prints by KAVORYN Studio.",
+  "storeUrl": "https://kavoryn-two.vercel.app/",
+  "currency": "INR",
+  "currencySymbol": "₹",
+  "shipping": {
+    "freeShippingThreshold": 499,
+    "standardShippingFee": 79,
+    "transitTime": "3–5 business days",
+    "deliveryZone": "Pan-India",
+    "packaging": "Heavy-duty triangular mailing tubes"
+  },
+  "materials": {
+    "paper": "230 GSM acid-free museum-grade archival matte / 260 GSM gallery lustre",
+    "printing": "Anti-fade pigment inks"
+  },
+  "sizes": [
+    { "size": "A4", "dimensionsCm": "21.0 × 29.7 cm", "dimensionsInches": "8.3 × 11.7 in", "priceMatte": 149, "priceLustre": 199 },
+    { "size": "A3", "dimensionsCm": "29.7 × 42.0 cm", "dimensionsInches": "11.7 × 16.5 in", "priceMatte": 249, "priceLustre": 299 },
+    { "size": "A2", "dimensionsCm": "42.0 × 59.4 cm", "dimensionsInches": "16.5 × 23.4 in", "priceMatte": 399, "priceLustre": 449 },
+    { "size": "A1", "dimensionsCm": "59.4 × 84.1 cm", "dimensionsInches": "23.4 × 33.1 in", "priceMatte": 699, "priceLustre": 749 }
+  ],
+  "collections": [
+    {
+      "slug": "form",
+      "name": "FORM",
+      "description": "Exercises in balance, bold geometry, and electric negative space.",
+      "url": "https://kavoryn-two.vercel.app/collections/form"
+    },
+    {
+      "slug": "frame",
+      "name": "FRAME",
+      "description": "Cinematic visual moments captured between stillness and light.",
+      "url": "https://kavoryn-two.vercel.app/collections/frame"
+    },
+    {
+      "slug": "type",
+      "name": "TYPE",
+      "description": "Typographic manifestos typeset for rooms with an opinion.",
+      "url": "https://kavoryn-two.vercel.app/collections/type"
+    },
+    {
+      "slug": "elsewhere",
+      "name": "ELSEWHERE",
+      "description": "Atmospheric gradients and palettes drawn from distant coastlines.",
+      "url": "https://kavoryn-two.vercel.app/collections/elsewhere"
+    },
+    {
+      "slug": "organic",
+      "name": "ORGANIC",
+      "description": "Earthy structures where brutalist lines meet biophilic growth.",
+      "url": "https://kavoryn-two.vercel.app/collections/organic"
+    },
+    {
+      "slug": "personal",
+      "name": "PERSONAL",
+      "description": "Custom typographic prints with your own words and thoughts.",
+      "url": "https://kavoryn-two.vercel.app/collections/personal"
+    }
+  ],
+  "products": [
+    {
+      "id": "1",
+      "sku": "KVR-FOR-001",
+      "slug": "shape-language",
+      "name": "Shape Language",
+      "collection": "form",
+      "description": "An exercise in balance, form, and electric negative space.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#3155E7", "#D6F04A", "#F5F1E8"],
+      "motif": "circle",
+      "url": "https://kavoryn-two.vercel.app/product/shape-language"
+    },
+    {
+      "id": "2",
+      "sku": "KVR-FOR-002",
+      "slug": "the-blue-dimension",
+      "name": "The Blue Dimension",
+      "collection": "form",
+      "description": "A cobalt field where geometry slips out of frame.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#3155E7", "#171717", "#F5F1E8"],
+      "motif": "grid",
+      "url": "https://kavoryn-two.vercel.app/product/the-blue-dimension"
+    },
+    {
+      "id": "3",
+      "sku": "KVR-FOR-003",
+      "slug": "organic-disorder",
+      "name": "Organic Disorder",
+      "collection": "form",
+      "description": "Rough shapes, imperfect systems, beautiful friction.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#F05A3A", "#D6F04A", "#171717"],
+      "motif": "wave",
+      "url": "https://kavoryn-two.vercel.app/product/organic-disorder"
+    },
+    {
+      "id": "4",
+      "sku": "KVR-CIN-001",
+      "slug": "after-hours",
+      "name": "After Hours",
+      "collection": "frame",
+      "description": "A cinematic quiet after the city has emptied.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#171717", "#F05A3A", "#3155E7"],
+      "motif": "window",
+      "url": "https://kavoryn-two.vercel.app/product/after-hours"
+    },
+    {
+      "id": "5",
+      "sku": "KVR-CIN-004",
+      "slug": "the-last-light",
+      "name": "The Last Light",
+      "collection": "frame",
+      "description": "The final flare of an unrepeatable day.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#F05A3A", "#F5F1E8", "#171717"],
+      "motif": "sun",
+      "url": "https://kavoryn-two.vercel.app/product/the-last-light"
+    },
+    {
+      "id": "6",
+      "sku": "KVR-TYP-001",
+      "slug": "make-it-matter",
+      "name": "Make It Matter",
+      "collection": "type",
+      "description": "A daily visual note to choose intent.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#D6F04A", "#171717", "#3155E7"],
+      "motif": "type",
+      "url": "https://kavoryn-two.vercel.app/product/make-it-matter"
+    },
+    {
+      "id": "7",
+      "sku": "KVR-TYP-002",
+      "slug": "less-ordinary",
+      "name": "Less Ordinary",
+      "collection": "type",
+      "description": "For rooms that refuse the expected.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#F5F1E8", "#3155E7", "#F05A3A"],
+      "motif": "type",
+      "url": "https://kavoryn-two.vercel.app/product/less-ordinary"
+    },
+    {
+      "id": "8",
+      "sku": "KVR-TYP-004",
+      "slug": "create-anyway",
+      "name": "Create Anyway",
+      "collection": "type",
+      "description": "A stubborn little manifesto in poster form.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#F05A3A", "#171717", "#D6F04A"],
+      "motif": "type",
+      "url": "https://kavoryn-two.vercel.app/product/create-anyway"
+    },
+    {
+      "id": "9",
+      "sku": "KVR-ELS-002",
+      "slug": "coastal-state",
+      "name": "Coastal State",
+      "collection": "elsewhere",
+      "description": "Salt-air palettes for a slower state of mind.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#3155E7", "#D6F04A", "#F5F1E8"],
+      "motif": "wave",
+      "url": "https://kavoryn-two.vercel.app/product/coastal-state"
+    },
+    {
+      "id": "10",
+      "sku": "KVR-ORG-001",
+      "slug": "wild-geometry",
+      "name": "Wild Geometry",
+      "collection": "organic",
+      "description": "Where sharp edges learn to grow.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#D6F04A", "#171717", "#F05A3A"],
+      "motif": "leaf",
+      "url": "https://kavoryn-two.vercel.app/product/wild-geometry"
+    },
+    {
+      "id": "11",
+      "sku": "KVR-ORG-003",
+      "slug": "quiet-earth",
+      "name": "Quiet Earth",
+      "collection": "organic",
+      "description": "A grounding composition of warm matter.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#F05A3A", "#F5F1E8", "#171717"],
+      "motif": "sun",
+      "url": "https://kavoryn-two.vercel.app/product/quiet-earth"
+    },
+    {
+      "id": "12",
+      "sku": "KVR-PER-001",
+      "slug": "your-name",
+      "name": "Your Name",
+      "collection": "personal",
+      "description": "Your words, typeset for your wall.",
+      "priceRange": { "min": 149, "max": 749, "currency": "INR" },
+      "colors": ["#3155E7", "#F5F1E8", "#D6F04A"],
+      "motif": "type",
+      "url": "https://kavoryn-two.vercel.app/product/your-name"
+    }
+  ]
+}

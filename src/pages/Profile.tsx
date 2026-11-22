@@ -77,7 +77,6 @@ export const ProfilePage: React.FC = () => {
   const [trackError, setTrackError] = useState<string | null>(null)
 
   const loadProfileData = async () => {
-    setIsLoading(true)
     try {
       // 1. Sync Clerk user into Convex database
       if (clerkUser) {
@@ -106,10 +105,22 @@ export const ProfilePage: React.FC = () => {
   }
 
   useEffect(() => {
+    let ignore = false
     if (clerkUser) {
-      loadProfileData()
+      void (async () => {
+        await loadProfileData()
+      })()
     } else {
-      setIsLoading(false)
+      const timer = setTimeout(() => {
+        if (!ignore) setIsLoading(false)
+      }, 0)
+      return () => {
+        ignore = true
+        clearTimeout(timer)
+      }
+    }
+    return () => {
+      ignore = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clerkUser])

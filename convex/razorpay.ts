@@ -130,11 +130,11 @@ export async function callRazorpayOrdersApi(params: {
     clearTimeout(timeoutHandle)
     if (err instanceof Error) {
       if (err.name === 'AbortError' || err.message?.includes('aborted')) {
-        throw new Error(`Razorpay Orders API timed out after ${timeoutMs}ms.`)
+        throw new Error(`Razorpay Orders API timed out after ${timeoutMs}ms.`, { cause: err })
       }
       throw err
     }
-    throw new Error('Unexpected network failure while connecting to Razorpay.')
+    throw new Error('Unexpected network failure while connecting to Razorpay.', { cause: err })
   }
 }
 
@@ -186,11 +186,11 @@ export async function callRazorpayPaymentFetchApi(params: {
     clearTimeout(timeoutHandle)
     if (err instanceof Error) {
       if (err.name === 'AbortError' || err.message?.includes('aborted')) {
-        throw new Error(`Razorpay Payments API timed out after ${timeoutMs}ms.`)
+        throw new Error(`Razorpay Payments API timed out after ${timeoutMs}ms.`, { cause: err })
       }
       throw err
     }
-    throw new Error('Unexpected network failure while connecting to Razorpay.')
+    throw new Error('Unexpected network failure while connecting to Razorpay.', { cause: err })
   }
 }
 
@@ -247,11 +247,11 @@ export async function callRazorpayPaymentCaptureApi(params: {
     clearTimeout(timeoutHandle)
     if (err instanceof Error) {
       if (err.name === 'AbortError' || err.message?.includes('aborted')) {
-        throw new Error(`Razorpay Payment Capture API timed out after ${timeoutMs}ms.`)
+        throw new Error(`Razorpay Payment Capture API timed out after ${timeoutMs}ms.`, { cause: err })
       }
       throw err
     }
-    throw new Error('Unexpected network failure while connecting to Razorpay.')
+    throw new Error('Unexpected network failure while connecting to Razorpay.', { cause: err })
   }
 }
 

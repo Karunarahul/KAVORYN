@@ -65,7 +65,7 @@ export const AdminPage: React.FC = () => {
     standardShippingFee: 79,
     currency: 'INR',
   })
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(true)
   const [actionNotice, setActionNotice] = useState<string | null>(null)
 
   // Settings form local state
@@ -73,7 +73,6 @@ export const AdminPage: React.FC = () => {
   const [feeInput, setFeeInput] = useState(79)
 
   const loadData = async () => {
-    setIsRefreshing(true)
     try {
       if (user) {
         await storeBackend.syncUser({
@@ -207,7 +206,7 @@ export const AdminPage: React.FC = () => {
   }
 
   // The authenticated admin dashboard contents
-  const AdminDashboardContent = () => (
+  const renderAdminDashboardContent = () => (
     <>
       {/* Top Action Notification */}
       {actionNotice && (
@@ -914,7 +913,7 @@ export const AdminPage: React.FC = () => {
     </>
   )
 
-  const CustomerRestrictedView = () => (
+  const renderCustomerRestrictedView = () => (
     <div className="customer-restricted-card" role="alert">
       <div className="restricted-badge-wrap">
         <ShieldAlert size={36} />
@@ -1056,9 +1055,9 @@ export const AdminPage: React.FC = () => {
         <>
           <Show when="signed-in">
             {dbUser?.role === 'customer' ? (
-              <CustomerRestrictedView />
+              renderCustomerRestrictedView()
             ) : (
-              <AdminDashboardContent />
+              renderAdminDashboardContent()
             )}
           </Show>
           <Show when="signed-out">
@@ -1093,7 +1092,7 @@ export const AdminPage: React.FC = () => {
           </Show>
         </>
       ) : (
-        <AdminDashboardContent />
+        renderAdminDashboardContent()
       )}
 
       <div className="admin-footer-nav">

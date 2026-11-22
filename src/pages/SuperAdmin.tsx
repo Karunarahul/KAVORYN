@@ -108,7 +108,6 @@ export const SuperAdminPage: React.FC = () => {
   const [orderSearchQuery, setOrderSearchQuery] = useState('')
 
   const loadAllData = async () => {
-    setIsSyncing(true)
     try {
       if (user) {
         try {
@@ -161,7 +160,9 @@ export const SuperAdminPage: React.FC = () => {
 
   useEffect(() => {
     if (isLoaded) {
-      loadAllData()
+      void (async () => {
+        await loadAllData()
+      })()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isLoaded])
@@ -273,7 +274,7 @@ export const SuperAdminPage: React.FC = () => {
   })
 
   // Denied Views
-  const CustomerDeniedView = () => (
+  const renderCustomerDeniedView = () => (
     <div className="customer-restricted-card" role="alert">
       <div className="restricted-badge-wrap">
         <ShieldAlert size={36} />
@@ -297,7 +298,7 @@ export const SuperAdminPage: React.FC = () => {
     </div>
   )
 
-  const AdminDeniedView = () => (
+  const renderAdminDeniedView = () => (
     <div className="customer-restricted-card" role="alert">
       <div className="restricted-badge-wrap">
         <AlertTriangle size={36} />
@@ -431,9 +432,9 @@ export const SuperAdminPage: React.FC = () => {
                 <span>VERIFYING SUPER ADMIN AUTHORIZATION...</span>
               </div>
             ) : dbUser?.role === 'customer' ? (
-              <CustomerDeniedView />
+              renderCustomerDeniedView()
             ) : dbUser?.role === 'admin' ? (
-              <AdminDeniedView />
+              renderAdminDeniedView()
             ) : (
               /* Authorized Super Admin Dashboard */
               <>

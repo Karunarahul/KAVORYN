@@ -14,7 +14,7 @@ export const Home: React.FC = () => {
     'ORIGINAL CONTEMPORARY POSTER ART',
     'ARCHIVAL 230 GSM ALPHA-CELLULOSE',
     'PRINTED IN INDIA',
-    'FOLLOW @KAVORYN',
+    `FOLLOW ${INSTAGRAM_HANDLE.toUpperCase()}`,
     'MAKE YOUR WALLS SPEAK',
   ]
 
@@ -254,10 +254,10 @@ export const Home: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="button acid large prelaunch-banner-btn"
-              aria-label={`Follow @kavoryn on Instagram`}
+              aria-label={`Follow ${INSTAGRAM_HANDLE} on Instagram`}
             >
               <Instagram size={20} aria-hidden="true" />
-              <span>FOLLOW @KAVORYN ON INSTAGRAM</span>
+              <span>FOLLOW {INSTAGRAM_HANDLE.toUpperCase()} ON INSTAGRAM</span>
               <ArrowRight size={20} aria-hidden="true" />
             </a>
           </div>

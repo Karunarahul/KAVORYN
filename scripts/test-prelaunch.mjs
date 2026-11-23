@@ -122,6 +122,19 @@ test('8. styles.css contains prelaunch styles, mobile breakpoints, and prefers-r
   assert.ok(css.includes('@media (prefers-reduced-motion: reduce)'), 'Must respect prefers-reduced-motion')
 })
 
+// 9. Centralized Instagram Configuration
+test('9. config.ts defines official Instagram URL and handle', () => {
+  const configCode = fs.readFileSync(path.join(root, 'src/config.ts'), 'utf-8')
+  assert.ok(
+    configCode.includes('https://www.instagram.com/kavoryn.official/'),
+    'Must define official Instagram profile URL'
+  )
+  assert.ok(
+    configCode.includes('@kavoryn.official'),
+    'Must define official Instagram handle'
+  )
+})
+
 console.log('\n=================================================================')
 console.log(`  AUDIT RESULTS: ${passed} PASSED, ${failed} FAILED`)
 console.log('=================================================================')

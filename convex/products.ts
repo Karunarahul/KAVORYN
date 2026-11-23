@@ -789,6 +789,132 @@ export const adminRestore = mutation({
 })
 
 /**
+ * Protected Admin Query: Check if a product can be permanently deleted or why it is protected.
+ * Returns eligibility status: 'deletable' | 'referenced_by_orders' | 'referenced_by_active_carts' | 'already_archived' | 'not_found'
+ */
+export const checkDeleteEligibility = query({
+  args: { id: v.id('products') },
+  handler: async (ctx, args) => {
+    // Requires Admin or Super Admin authentication
+    await requireAdminAuth(ctx)
+
+    const product = await ctx.db.get(args.id)
+    if (!product) {
+      return {
+        eligibility: 'not_found' as const,
+        canDelete: false,
+        canArchive: false,
+        isArchived: false,
+        reason: 'Product not found in catalogue.',
+        referencingOrdersCount: 0,
+        referencingOrders: [],
+      }
+    }
+
+    const isArchived = product.status === 'archived'
+
+    // Check for references in orders table
+    const allOrders = await ctx.db.query('orders').collect()
+    const referencingOrders = allOrders.filter((order) =>
+      order.items.some(
+        (item) =>
+          item.productId === args.id ||
+          (product.sku && item.productSku === product.sku) ||
+          (product.slug && item.productId === product.slug)
+      )
+    )
+
+    const pendingOrders = referencingOrders.filter(
+      (o) =>
+        o.status === 'pending' ||
+        o.paymentStatus === 'pending' ||
+        o.paymentStatus === 'attempted'
+    )
+    const historicalOrders = referencingOrders.filter(
+      (o) =>
+        o.status !== 'pending' &&
+        o.paymentStatus !== 'pending' &&
+        o.paymentStatus !== 'attempted'
+    )
+
+    const mappedOrders = referencingOrders.slice(0, 10).map((o) => ({
+      orderNumber: o.orderNumber,
+      status: o.status,
+      paymentStatus: o.paymentStatus || 'unknown',
+      createdAt: o.createdAt,
+      itemCount: o.items
+        .filter(
+          (i) =>
+            i.productId === args.id ||
+            (product.sku && i.productSku === product.sku) ||
+            (product.slug && i.productId === product.slug)
+        )
+        .reduce((sum, i) => sum + i.quantity, 0),
+    }))
+
+    // 1. If referenced in historical customer orders
+    if (historicalOrders.length > 0) {
+      const eligibility = isArchived
+        ? ('already_archived' as const)
+        : ('referenced_by_orders' as const)
+      return {
+        eligibility,
+        canDelete: false,
+        canArchive: !isArchived,
+        isArchived,
+        reason: isArchived
+          ? `This product is already archived. To preserve order history and financial records for ${historicalOrders.length} customer order(s), it cannot be permanently deleted.`
+          : `This product is linked to ${historicalOrders.length} historical customer order(s) (e.g. #${historicalOrders[0].orderNumber}). To preserve order history and financial records, it cannot be permanently deleted.`,
+        product: {
+          id: product._id,
+          name: product.name,
+          sku: product.sku,
+          status: product.status || 'published',
+        },
+        referencingOrdersCount: historicalOrders.length,
+        referencingOrders: mappedOrders,
+      }
+    }
+
+    // 2. If referenced in active / pending carts or checkouts
+    if (pendingOrders.length > 0) {
+      return {
+        eligibility: 'referenced_by_active_carts' as const,
+        canDelete: false,
+        canArchive: !isArchived,
+        isArchived,
+        reason: `This product is currently part of ${pendingOrders.length} active or pending customer checkout(s). It cannot be permanently deleted while checkout sessions are pending.`,
+        product: {
+          id: product._id,
+          name: product.name,
+          sku: product.sku,
+          status: product.status || 'published',
+        },
+        referencingOrdersCount: pendingOrders.length,
+        referencingOrders: mappedOrders,
+      }
+    }
+
+    // 3. Unreferenced product: fully deletable by Super Admin
+    return {
+      eligibility: 'deletable' as const,
+      canDelete: true,
+      canArchive: !isArchived,
+      isArchived,
+      reason: 'Product has zero customer order references and can be permanently deleted by Super Admin.',
+      product: {
+        id: product._id,
+        name: product.name,
+        sku: product.sku,
+        status: product.status || 'published',
+      },
+      referencingOrdersCount: 0,
+      referencingOrders: [],
+    }
+  },
+})
+
+/**
  * Protected Super Admin Mutation: Permanently delete a product.
  * Enforces historical order integrity: strictly prevents deletion if product is referenced in any customer order.
  */
@@ -803,7 +929,10 @@ export const adminDelete = mutation({
     const allOrders = await ctx.db.query('orders').collect()
     const referencedOrder = allOrders.find((order) =>
       order.items.some(
-        (item) => item.productId === args.id || item.productSku === product.sku
+        (item) =>
+          item.productId === args.id ||
+          (product.sku && item.productSku === product.sku) ||
+          (product.slug && item.productId === product.slug)
       )
     )
 

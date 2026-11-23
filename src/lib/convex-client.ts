@@ -12,7 +12,7 @@ import {
   type PosterFinish,
   type Product,
 } from '../data'
-import type { PosterSize } from '../types'
+import type { DeleteEligibilityResult, PosterSize } from '../types'
 import { convexUrl, isConvexConfigured } from './env'
 
 export interface DBProduct extends Product {
@@ -478,6 +478,15 @@ export const storeBackend = {
       })
     }
     throw new Error('Convex backend required for product deletion.')
+  },
+
+  async checkProductDeleteEligibility(id: string): Promise<DeleteEligibilityResult> {
+    if (isConvexConfigured && convexClient) {
+      return (await convexClient.query(api.products.checkDeleteEligibility, {
+        id: id as unknown as Id<'products'>,
+      })) as DeleteEligibilityResult
+    }
+    throw new Error('Convex backend required for deletion eligibility check.')
   },
 
   async adminDuplicateProduct(id: string): Promise<{ success: boolean; id?: string }> {

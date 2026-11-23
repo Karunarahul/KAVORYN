@@ -24,12 +24,14 @@ import {
   SlidersHorizontal,
   ToggleLeft,
   ToggleRight,
+  Trash2,
   UserCheck,
   UserX,
   Users,
   X,
 } from 'lucide-react'
 import { formatMoney } from '../data'
+import { ProductDeleteModal } from '../components/ProductDeleteModal'
 import {
   storeBackend,
   type DBActivityLog,
@@ -77,6 +79,7 @@ export const SuperAdminPage: React.FC = () => {
   const [orders, setOrders] = useState<DBOrder[]>([])
   const [, setCustomRequests] = useState<DBCustomRequest[]>([])
   const [products, setProducts] = useState<DBProduct[]>([])
+  const [deleteTarget, setDeleteTarget] = useState<DBProduct | null>(null)
   const [customers, setCustomers] = useState<
     Array<{
       _id: string
@@ -853,6 +856,7 @@ export const SuperAdminPage: React.FC = () => {
                             <th>MOTIF</th>
                             <th>PRICING (A4 / A3 / A2 / A1)</th>
                             <th>STOREFRONT VISIBILITY</th>
+                            <th>ACTIONS</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -881,6 +885,17 @@ export const SuperAdminPage: React.FC = () => {
                                 >
                                   {p.active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                                   <span>{p.active ? 'ACTIVE' : 'HIDDEN'}</span>
+                                </button>
+                              </td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="button ghost small"
+                                  title="Permanently delete or archive print"
+                                  style={{ color: '#ef4444' }}
+                                  onClick={() => setDeleteTarget(p)}
+                                >
+                                  <Trash2 size={16} />
                                 </button>
                               </td>
                             </tr>
@@ -1315,6 +1330,25 @@ export const SuperAdminPage: React.FC = () => {
           <ArrowRight size={16} />
         </Link>
       </div>
+
+      {/* Super Admin Protected Delete & Safe Archival Modal */}
+      {deleteTarget && (
+        <ProductDeleteModal
+          isOpen={!!deleteTarget}
+          product={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onDeleted={async (msg) => {
+            notify(msg)
+            setDeleteTarget(null)
+            await loadAllData()
+          }}
+          onArchived={async (msg) => {
+            notify(msg)
+            setDeleteTarget(null)
+            await loadAllData()
+          }}
+        />
+      )}
     </div>
   )
 }

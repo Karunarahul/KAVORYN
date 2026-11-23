@@ -23,6 +23,7 @@ import {
 } from '../../lib/convex-client'
 import { formatMoney } from '../../data'
 import { ProductEditorModal } from './ProductEditorModal'
+import { ProductDeleteModal } from '../../components/ProductDeleteModal'
 
 export const AdminCataloguePage: React.FC = () => {
   const { user } = useUser()
@@ -45,6 +46,7 @@ export const AdminCataloguePage: React.FC = () => {
   // Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<DBProduct | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<DBProduct | null>(null)
 
   const notify = (msg: string) => {
     setActionNotice(msg)
@@ -154,17 +156,6 @@ export const AdminCataloguePage: React.FC = () => {
     try {
       await storeBackend.adminDuplicateProduct(id)
       notify(`Duplicated '${name}' as a new draft.`)
-      await loadData()
-    } catch (err) {
-      notifyErr(err)
-    }
-  }
-
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Permanently delete '${name}'? This action cannot be undone and will fail if the print is part of historical customer orders.`)) return
-    try {
-      await storeBackend.adminDeleteProduct(id)
-      notify(`'${name}' permanently deleted.`)
       await loadData()
     } catch (err) {
       notifyErr(err)
@@ -443,9 +434,8 @@ export const AdminCataloguePage: React.FC = () => {
                     </td>
                     <td>
                       <span
-                        className={`role-pill ${
-                          effectiveRenderMode === 'image' ? 'role-admin' : 'role-customer'
-                        }`}
+                        className={`role-pill ${effectiveRenderMode === 'image' ? 'role-admin' : 'role-customer'
+                          }`}
                         style={{ fontSize: '0.68rem', padding: '2px 8px' }}
                       >
                         {effectiveRenderMode === 'image' ? 'ARTWORK IMAGE' : 'PROCEDURAL'}
@@ -456,13 +446,12 @@ export const AdminCataloguePage: React.FC = () => {
                     </td>
                     <td>
                       <span
-                        className={`role-pill ${
-                          effectiveStatus === 'published'
-                            ? 'role-super-admin'
-                            : effectiveStatus === 'draft'
-                              ? 'role-admin'
-                              : 'role-customer'
-                        }`}
+                        className={`role-pill ${effectiveStatus === 'published'
+                          ? 'role-super-admin'
+                          : effectiveStatus === 'draft'
+                            ? 'role-admin'
+                            : 'role-customer'
+                          }`}
                       >
                         {effectiveStatus.toUpperCase()}
                       </span>
@@ -514,9 +503,9 @@ export const AdminCataloguePage: React.FC = () => {
                           <button
                             type="button"
                             className="button ghost small"
-                            title="Permanently delete"
+                            title="Permanently delete or safely archive print"
                             style={{ color: '#ef4444' }}
-                            onClick={() => prod._id && handleDelete(prod._id, prod.name)}
+                            onClick={() => setDeleteTarget(prod)}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -555,6 +544,25 @@ export const AdminCataloguePage: React.FC = () => {
           notifyErr={notifyErr}
           isSuperAdmin={dbUser.role === 'super_admin'}
           onArchive={handleArchive}
+        />
+      )}
+
+      {/* Super Admin Protected Delete & Safe Archival Modal */}
+      {deleteTarget && (
+        <ProductDeleteModal
+          isOpen={!!deleteTarget}
+          product={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onDeleted={async (msg) => {
+            notify(msg)
+            setDeleteTarget(null)
+            await loadData()
+          }}
+          onArchived={async (msg) => {
+            notify(msg)
+            setDeleteTarget(null)
+            await loadData()
+          }}
         />
       )}
     </div>

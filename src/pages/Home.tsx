@@ -1,100 +1,137 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, Sparkles, ShieldCheck, Truck, Frame } from 'lucide-react'
-import { useQuery } from 'convex/react'
-import { api } from '../../convex/_generated/api'
-import { collections, collectionDescriptions, products as staticProducts, type Collection, type Product } from '../data'
-import { Poster } from '../components/Poster'
-import { ProductCard } from '../components/ProductCard'
+import { ArrowRight, ArrowUpRight, Instagram, Sparkles, ShieldCheck, Truck, Layers } from 'lucide-react'
+import { PrelaunchPoster } from '../components/PrelaunchPoster'
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from '../config'
 
+/**
+ * Pre-Launch Storefront Landing Page
+ * Performance-optimized, design-led editorial coming-soon experience.
+ * Zero database calls, zero layout shifts, ultra-fast initial paint.
+ */
 export const Home: React.FC = () => {
-  const liveItems = useQuery(api.products.list, {})
+  const marqueeItems = [
+    'FIRST COLLECTION DROPPING SOON',
+    'ORIGINAL CONTEMPORARY POSTER ART',
+    'ARCHIVAL 230 GSM ALPHA-CELLULOSE',
+    'PRINTED IN INDIA',
+    'FOLLOW @KAVORYN',
+    'MAKE YOUR WALLS SPEAK',
+  ]
 
-  const featured: Product[] = liveItems && liveItems.length > 0
-    ? liveItems.slice(0, 6).map((p) => ({
-        id: p._id,
-        slug: p.slug,
-        sku: p.sku,
-        name: p.name,
-        collection: p.collection as Collection,
-        description: p.description,
-        colors: p.colors as [string, string, string],
-        motif: p.motif as Product['motif'],
-        renderMode: (p.renderMode as 'image' | 'procedural') || (p.thumbnailUrl ? 'image' : 'procedural'),
-        thumbnailUrl: p.thumbnailUrl,
-      }))
-    : staticProducts.slice(0, 6)
-
-  const heroPosterProduct = featured[5] || staticProducts[5]
-
-  const marqueeText =
-    'FORM — FRAME — TYPE — ELSEWHERE — ORGANIC — PERSONAL — 230 GSM ARCHIVAL PAPER — PRINTED IN INDIA — MAKE YOUR WALLS SPEAK — '
+  const marqueeText = marqueeItems.join(' — ') + ' — '
 
   return (
-    <div className="home-page">
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-copy">
-          <div className="hero-eyebrow-wrap">
-            <span className="eyebrow">CONTEMPORARY ART STUDIO · INDIA</span>
-            <span className="hero-edition-tag">EDITION 01/26</span>
-          </div>
-
-          <h1 className="hero-title">
-            MAKE YOUR
-            <br />
-            <em>WALLS</em> SPEAK.
-          </h1>
-
-          <p className="lede">
-            Contemporary art prints made to start a conversation, not match the
-            sofa. Archival pigment inks on 230 GSM museum-grade matte paper.
-          </p>
-
-          <div className="hero-actions">
-            <Link className="button blue" to="/shop">
-              <span>SHOP THE FIRST EDITION</span>
-              <ArrowRight size={16} />
-            </Link>
-            <Link className="button outline" to="/customize">
-              <span>CUSTOM PRINT</span>
-            </Link>
-          </div>
-
-          <div className="hero-perks">
-            <div className="perk-item">
-              <Truck size={15} />
-              <span>Free shipping over ₹499</span>
+    <div className="home-page prelaunch-page">
+      {/* 1. Hero Section */}
+      <section className="prelaunch-hero" aria-labelledby="hero-main-title">
+        <div className="prelaunch-hero-grid">
+          {/* Left Column: Editorial Headline & Launch Announcement */}
+          <div className="prelaunch-hero-copy">
+            <div className="prelaunch-status-pill-wrap">
+              <span className="prelaunch-status-pulse" aria-hidden="true" />
+              <span className="prelaunch-status-tag font-mono">
+                FIRST COLLECTION · DROPPING SOON
+              </span>
             </div>
-            <div className="perk-item">
-              <ShieldCheck size={15} />
-              <span>Anti-fade archival inks</span>
-            </div>
-            <div className="perk-item">
-              <Frame size={15} />
-              <span>Fits standard frames</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="hero-art">
-          <div className="hero-art-frame">
-            <Poster large p={heroPosterProduct} />
-          </div>
-          <div className="hero-sticker" title="Designed and printed in India">
-            <span>
-              INDIA
+            <div className="prelaunch-eyebrow-line font-mono">
+              <span>INDEPENDENT ART STUDIO</span>
+              <span className="dot" aria-hidden="true">·</span>
+              <span>INDIA</span>
+              <span className="dot" aria-hidden="true">·</span>
+              <span className="edition-badge">EDITION 01/26</span>
+            </div>
+
+            <h1 id="hero-main-title" className="prelaunch-hero-title">
+              YOUR WALLS
               <br />
-              TO YOUR
+              ARE ABOUT
               <br />
-              WALL
-            </span>
+              <em>TO CHANGE.</em>
+            </h1>
+
+            <p className="prelaunch-hero-lede">
+              A new point of view is taking shape. Original poster art, made to
+              bring personality to the spaces you call yours. Stay close.
+            </p>
+
+            {/* Launch Announcement Badge */}
+            <div className="prelaunch-announcement-card">
+              <div className="announcement-header font-mono">
+                <Sparkles size={16} className="announcement-icon" aria-hidden="true" />
+                <span>LAUNCH ANNOUNCEMENT</span>
+              </div>
+              <strong className="announcement-title">
+                FIRST COLLECTION DROPPING SOON.
+              </strong>
+              <p className="announcement-desc">
+                Follow our official studio dispatch for first access, limited edition
+                previews, and launch dates.
+              </p>
+            </div>
+
+            {/* Primary Call to Action */}
+            <div className="prelaunch-hero-actions">
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="button blue prelaunch-primary-btn"
+                aria-label={`Follow the drop on Instagram at ${INSTAGRAM_HANDLE}`}
+              >
+                <Instagram size={18} aria-hidden="true" />
+                <span>FOLLOW THE DROP</span>
+                <ArrowRight size={18} className="cta-arrow" aria-hidden="true" />
+              </a>
+
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="prelaunch-handle-badge font-mono"
+              >
+                <span>VIA {INSTAGRAM_HANDLE}</span>
+                <ArrowUpRight size={13} aria-hidden="true" />
+              </a>
+            </div>
+
+            {/* Micro Perks Strip */}
+            <div className="prelaunch-perks-row font-mono" aria-label="Studio specifications">
+              <div className="perk-item">
+                <ShieldCheck size={14} aria-hidden="true" />
+                <span>230 GSM MUSEUM MATTE</span>
+              </div>
+              <div className="perk-item">
+                <Truck size={14} aria-hidden="true" />
+                <span>RIGID TUBE DISPATCH</span>
+              </div>
+              <div className="perk-item">
+                <Layers size={14} aria-hidden="true" />
+                <span>LIMITED RUN PRINTING</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Large Original Campaign Graphic Poster */}
+          <div className="prelaunch-hero-visual">
+            <div className="visual-stage-container">
+              <PrelaunchPoster priority />
+              <div className="visual-sticker-tag" title="Designed and printed in India">
+                <span className="font-mono">
+                  01 // 26
+                  <br />
+                  NEW DELHI
+                  <br />
+                  INDIA
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Infinite Animated Marquee */}
-      <section className="marquee-wrapper" aria-hidden="true">
+      {/* 2. Infinite Kinetic Brutalist Marquee */}
+      <section className="marquee-wrapper prelaunch-marquee" aria-hidden="true">
         <div className="marquee-track">
           <span className="marquee-content">{marqueeText}</span>
           <span className="marquee-content">{marqueeText}</span>
@@ -102,153 +139,132 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Curated Collections Strip */}
-      <section className="collections-strip-section">
-        <div className="strip-header">
-          <span className="eyebrow">EXPLORE BY CURATED THEME</span>
-          <h2 className="strip-title">SIX COLLECTIONS. ZERO COMPROMISE.</h2>
-        </div>
-        <div className="collections-pills-grid">
-          {Object.entries(collections).map(([slug, name]) => (
-            <Link
-              key={slug}
-              to={`/collections/${slug}`}
-              className="collection-pill-card"
-            >
-              <div className="pill-head">
-                <span className="pill-code">{slug.toUpperCase()}</span>
-                <span className="pill-name">{name}</span>
-              </div>
-              <p className="pill-desc">
-                {collectionDescriptions[slug as keyof typeof collections]}
+      {/* 3. Brand Statement Section */}
+      <section className="prelaunch-manifesto-section" aria-labelledby="manifesto-heading">
+        <div className="prelaunch-manifesto-inner">
+          <div className="manifesto-grid">
+            <div className="manifesto-head-col">
+              <span className="eyebrow font-mono">THE KAVORYN MANIFESTO</span>
+              <h2 id="manifesto-heading" className="manifesto-large-title">
+                NOT JUST DECOR.
+                <br />
+                <em>AN EXPRESSION</em>
+                <br />
+                OF YOU.
+              </h2>
+            </div>
+
+            <div className="manifesto-body-col">
+              <p className="manifesto-lead-quote">
+                &ldquo;Your space should say something about you. We&rsquo;re
+                creating something worth putting on your walls.&rdquo;
               </p>
-              <div className="pill-action">
-                <span>VIEW PRINTS</span>
-                <ArrowRight size={14} />
+              <p className="manifesto-paragraph">
+                Too much wall art exists merely to fill empty square footage.
+                We design printed statements rooted in contemporary graphic
+                culture, visual balance, and bold typography. Every piece is an
+                original design made in India with archival mineral inks on
+                museum-grade 230 GSM paper.
+              </p>
+
+              <div className="manifesto-author-block">
+                <span className="author-studio font-mono">KAVORYN STUDIO</span>
+                <span className="author-title">INDEPENDENT CONTEMPORARY ART PRINTS · INDIA</span>
               </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Section 01: The First Edition */}
-      <section className="section catalog-section">
-        <div className="section-head">
-          <p className="eyebrow">01 / THE FIRST EDITION</p>
-          <h2>
-            ART THAT
-            <br />
-            DOESN’T WHISPER.
-          </h2>
-          <Link className="section-head-link" to="/shop">
-            <span>VIEW ALL 12 PRINTS</span>
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-
-        <div className="product-grid">
-          {featured.map((p) => (
-            <ProductCard key={p.id} p={p} />
-          ))}
-        </div>
-
-        <div className="catalog-footer-action">
-          <Link to="/shop" className="button blue wide-button">
-            <span>EXPLORE ALL 12 PRINTS IN THE FIRST EDITION</span>
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-      </section>
-
-      {/* Studio Manifesto */}
-      <section className="manifesto">
-        <div className="manifesto-left">
-          <p className="manifesto-heading">
-            YOUR SPACE IS A<br />
-            <i>BLANK CANVAS.</i>
-          </p>
-          <div className="manifesto-meta">
-            <Sparkles size={20} className="manifesto-icon" />
-            <span>
-              We make printed matter for the beautifully opinionated. If you
-              wanted beige, you wouldn't be here.
-            </span>
-          </div>
-        </div>
-        <div className="manifesto-right">
-          <p className="manifesto-subcopy">
-            Every home has at least one wall begging to break the silence.
-            KAVORYN posters are designed in India and printed on demand with
-            archival precision so your rooms speak clearly.
-          </p>
-          <Link className="button acid" to="/customize">
-            <span>CUSTOMIZE A PRINT</span>
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-      </section>
-
-      {/* Why KAVORYN / Studio Values */}
-      <section className="section values">
-        <div className="values-header">
-          <p className="eyebrow">THE KAVORYN STANDARD</p>
-          <h2>BUILT FOR LONGEVITY.</h2>
-        </div>
-        <div className="values-grid">
-          <div className="value-item">
-            <span className="value-num">01</span>
-            <h3>
-              ARCHIVAL
-              <br />
-              QUALITY
-            </h3>
-            <p>
-              Rich mineral-pigment inks printed on heavyweight 230 GSM matte art
-              stock. Built to withstand light and outlast your next room
-              rearrangement.
-            </p>
-          </div>
-          <div className="value-item">
-            <span className="value-num">02</span>
-            <h3>
-              DESIGNED
-              <br />
-              IN INDIA
-            </h3>
-            <p>
-              Born from Indian contemporary graphic culture. No generic stock
-              imagery. Every piece is an original composition typeset with
-              intent.
-            </p>
-          </div>
-          <div className="value-item">
-            <span className="value-num">03</span>
-            <h3>
-              RIGID TUBE
-              <br />
-              SHIPPING
-            </h3>
-            <p>
-              Protected in heavy-duty triangular cardboard tubes with protective
-              kraft wrapping. Zero edge dents, zero plastic waste, pan-India
-              dispatch.
-            </p>
-          </div>
-          <div className="value-item">
-            <span className="value-num">04</span>
-            <h3>
-              UNIVERSAL
-              <br />
-              FRAME SIZING
-            </h3>
-            <p>
-              Standardized to global A-series dimensions (A4, A3, A2, A1). Slip
-              into off-the-shelf frames from Ikea, Amazon, or your neighborhood
-              framer without trimming.
-            </p>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* 4. Pillars of the First Collection */}
+      <section className="prelaunch-pillars-section" aria-labelledby="pillars-title">
+        <div className="pillars-container">
+          <div className="pillars-head">
+            <span className="eyebrow font-mono">01 // THE FIRST EDITION</span>
+            <h2 id="pillars-title" className="pillars-section-title">
+              WHAT WE&rsquo;RE BUILDING.
+            </h2>
+          </div>
+
+          <div className="pillars-grid">
+            <article className="pillar-card">
+              <span className="pillar-num font-mono">01</span>
+              <h3 className="pillar-title">
+                ORIGINAL
+                <br />
+                POSTER ART
+              </h3>
+              <p className="pillar-desc">
+                No generic stock imagery or repetitive mass-market graphics.
+                Every poster is an original composition shaped by typography,
+                geometry, and cultural commentary.
+              </p>
+            </article>
+
+            <article className="pillar-card">
+              <span className="pillar-num font-mono">02</span>
+              <h3 className="pillar-title">
+                MUSEUM-GRADE
+                <br />
+                GICLÉE PRINTING
+              </h3>
+              <p className="pillar-desc">
+                Printed using archival mineral pigment inks on heavyweight
+                230 GSM alpha-cellulose matte paper. Natural acid-free stock
+                engineered to never fade or yellow.
+              </p>
+            </article>
+
+            <article className="pillar-card">
+              <span className="pillar-num font-mono">03</span>
+              <h3 className="pillar-title">
+                UNIVERSAL
+                <br />
+                A-SERIES FRAMING
+              </h3>
+              <p className="pillar-desc">
+                Cut to standard international A-series dimensions (A4, A3, A2, A1).
+                Fits off-the-shelf Ikea frames or local Indian framers without
+                custom matting.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Pre-Launch Drop Callout Strip */}
+      <section className="prelaunch-cta-banner" aria-label="Follow the drop announcement">
+        <div className="cta-banner-inner">
+          <div className="cta-banner-content">
+            <span className="eyebrow font-mono">BE THERE FOR THE UNVEILING</span>
+            <h2 className="cta-banner-title">
+              THE DROP IS HAPPENING
+              <br />
+              <em>ON INSTAGRAM FIRST.</em>
+            </h2>
+            <p className="cta-banner-desc">
+              Follow our official studio account to see previews of the First
+              Collection and receive immediate notification when the store opens.
+            </p>
+          </div>
+
+          <div className="cta-banner-action">
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="button acid large prelaunch-banner-btn"
+              aria-label={`Follow @kavoryn on Instagram`}
+            >
+              <Instagram size={20} aria-hidden="true" />
+              <span>FOLLOW @KAVORYN ON INSTAGRAM</span>
+              <ArrowRight size={20} aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Archived First Edition Collections Strip (Temporarily hidden for pre-launch): <h2 className="strip-title">SIX COLLECTIONS. ZERO COMPROMISE.</h2> */}
     </div>
   )
 }
